@@ -33,6 +33,11 @@ public class DatagramService {
 
 		socket = new DatagramSocket(port);
 	}
+	
+	public int getPort()
+	{
+		return this.port;
+	}
 
 	public void sendDatagram(Datagram datagram) throws IOException {
 

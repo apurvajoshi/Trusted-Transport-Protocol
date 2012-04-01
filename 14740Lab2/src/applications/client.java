@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.net.SocketException;
 
 import services.DatagramService;
+import services.TTPSegmentService;
 import datatypes.Datagram;
 
 public class client {
 
-	private static DatagramService ds;
+	private static TTPSegmentService ts;
 	
 	/**
 	 * @param args
@@ -26,21 +27,12 @@ public class client {
 		
 		System.out.println("Starting client ...");
 		
+
 		int port = Integer.parseInt(args[0]);
-		ds = new DatagramService(port, 10);
+		//ds = new DatagramService(port, 10);
 		
-		Datagram datagram = new Datagram();
-		datagram.setData("Hello World!");
-		datagram.setSrcaddr("127.0.0.1");
-		datagram.setDstaddr("127.0.0.1");
-		datagram.setDstport((short)Integer.parseInt(args[1]));
-		datagram.setSrcport((short)port);
-		
-		ds.sendDatagram(datagram);
-		System.out.println("Sent datagram");
-		
-		datagram = ds.receiveDatagram();
-		System.out.println("Received " + datagram.getData());
+		ts = new TTPSegmentService(port,10);
+		ts.createConnection((short)port,(short)Integer.parseInt(args[1]),"127.0.0.1","127.0.0.1");
 	}
 	
 	private static void printUsage() {

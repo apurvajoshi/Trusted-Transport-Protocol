@@ -21,7 +21,7 @@ public class TTPSegment implements Serializable {
 	int ackNumber;
 	
 	//header length 
-	byte headerLen;
+	byte headerLen = 16;
 	
 	//Flags
 	byte flags;
@@ -36,8 +36,7 @@ public class TTPSegment implements Serializable {
 		super();
 	}
 	
-	public TTPSegment(short srcport, short dstport, int seqNumber, int ackNumber,
-	byte headerLen, byte flags, short rcvWindow, Object data) {
+	public TTPSegment(short srcport, short dstport, int seqNumber, int ackNumber,byte headerLen, byte flags, short rcvWindow, Object data) {
 		super();
 		this.srcport = srcport;
 		this.dstport = dstport;

@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.net.SocketException;
 
 import services.DatagramService;
+import services.TTPSegmentService;
 import datatypes.Datagram;
+import datatypes.TTPSegment;
 
 public class server {
 
-	private static DatagramService ds;
+	//public TTPSegmentService ts;
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 
@@ -22,26 +24,18 @@ public class server {
 		System.out.println("Starting Server ...");
 		
 		int port = Integer.parseInt(args[0]);
-		ds = new DatagramService(port, 10);
+		TTPSegmentService ts = new TTPSegmentService(port, 10);
 		
-		run();
+		while(true) {			
+			ts.acceptConnection();
+		}
+		//run();
 	}
 
 	private static void run() throws IOException, ClassNotFoundException {
 
-		Datagram datagram;
 		
-		while(true) {
-			datagram = ds.receiveDatagram();
-			System.out.println("Received datagram from " + datagram.getSrcaddr() + ":" + datagram.getSrcport() + " Data: " + datagram.getData());
-			Datagram ack = new Datagram();
-			ack.setSrcaddr(datagram.getDstaddr());
-			ack.setSrcport(datagram.getDstport());
-			ack.setDstaddr(datagram.getSrcaddr());
-			ack.setDstport(datagram.getSrcport());
-			ack.setData("ACK");
-			ds.sendDatagram(ack);
-		}
+		
 	}
 
 	private static void printUsage() {
