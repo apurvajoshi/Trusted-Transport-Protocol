@@ -4,16 +4,11 @@
 package applications;
 
 import java.io.IOException;
-import java.net.SocketException;
-
-import services.DatagramService;
 import services.TTPSegmentService;
-import datatypes.Datagram;
-import datatypes.TTPSegment;
 
 public class server {
 
-	//public TTPSegmentService ts;
+	public static TTPSegmentService ts;
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 
@@ -24,18 +19,15 @@ public class server {
 		System.out.println("Starting Server ...");
 		
 		int port = Integer.parseInt(args[0]);
-		TTPSegmentService ts = new TTPSegmentService(port, 10);
+		ts = new TTPSegmentService(port, 10);
 		
-		while(true) {			
-			ts.acceptConnection();
-		}
-		//run();
+		run();
 	}
 
 	private static void run() throws IOException, ClassNotFoundException {
-
-		
-		
+		while(true) {			
+			ts.acceptConnection();
+		}
 	}
 
 	private static void printUsage() {

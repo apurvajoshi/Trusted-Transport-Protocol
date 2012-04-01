@@ -5,11 +5,7 @@
 package applications;
 
 import java.io.IOException;
-import java.net.SocketException;
-
-import services.DatagramService;
 import services.TTPSegmentService;
-import datatypes.Datagram;
 
 public class client {
 
