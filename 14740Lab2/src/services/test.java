@@ -32,6 +32,9 @@ public class test extends Thread {
     }
 	TimerTask task = new TimerTask(){  
 		public void run() {  
+			
+			
+			System.out.println("\n.................\n");
          if(datagram== null)
 		System.out.println( "Must retransmit" );  
          //Go to some other function.
@@ -46,7 +49,7 @@ public class test extends Thread {
 
 public void getInput() throws Exception{  
 Timer timer = new Timer();  
-
+System.out.println("NANANNANAN");
 //For now 20 seconds
 timer.schedule( task, 20*1000 );  
   

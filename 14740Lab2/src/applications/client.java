@@ -29,6 +29,7 @@ public class client {
 		
 		ts = new TTPSegmentService(port,10);
 		ts.createConnection((short)port,(short)Integer.parseInt(args[1]),"127.0.0.1","127.0.0.1");
+		ts.initiateDestroy((short)port, (short)Integer.parseInt(args[1]), "127.0.0.1", "127.0.0.1");
 	}
 	
 	private static void printUsage() {

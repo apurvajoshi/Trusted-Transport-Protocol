@@ -15,7 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
+import services.test;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 
@@ -156,7 +156,12 @@ public class TTPSegmentService{
 		//Should start timer now to wait for 2MSL that is 120 seconds
 		
 		
-		
+		try{  
+			(new test(ds)).getInput();  
+			}  
+			catch( Exception e ){  
+			System.out.println( e );  
+			}  
 		
 		
 		
