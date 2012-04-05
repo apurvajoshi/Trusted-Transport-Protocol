@@ -10,19 +10,28 @@ package services;
 
 import java.io.IOException;
 import java.net.SocketException;
-
+import java.util.Arrays;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import services.test;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 
-public class TTPSegmentService {
+public class TTPSegmentService{
 
 	private DatagramService ds;
 
-	public TTPSegmentService(int port, int verbose) throws SocketException {
+	public TTPSegmentService(int port, int verbose) throws SocketException  {
 		super();
 		ds = new DatagramService(port, verbose);
 	}
 		
+	public DatagramService getDS()
+	{
+		 return ds;
+	}
 		
     public void createConnection(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
 	{
@@ -183,4 +192,50 @@ public class TTPSegmentService {
     }
 		
 
+    public void initiateDestroy(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
+    {
+    
+    	
+    	String data ="";
+    	 
+    	
+    	//Dummmy data.Should be changed
+		int seqNumber=100;
+		int ackNumber = 1000;			
+		
+		byte flag = 1;
+    	
+		TTPSegment seg = new TTPSegment(srcPort, dstPort, seqNumber, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
+		Datagram datagram = new Datagram();
+		datagram.setSrcaddr(srcAddr);
+		datagram.setDstaddr(dstAddr);
+		datagram.setDstport(dstPort);
+		datagram.setSrcport(srcPort);
+		datagram.setData(seg);		
+		ds.sendDatagram(datagram);
+		
+		//Should start timer now to wait for 2MSL that is 120 seconds
+		
+		
+		try{  
+			(new test(ds)).getInput();  
+			}  
+			catch( Exception e ){  
+			System.out.println( e );  
+			}  
+		
+		
+		
+		
+		
+	    //ds.receiveDatagram();	
+    	
+    	 
+    	
+    }
+    
+    
+    
 }
+
+
