@@ -40,7 +40,6 @@ public class TTPSegmentService {
 		datagram.setDstport(dstPort);
 		datagram.setSrcport(srcPort);
 		datagram.setData(seg);		
-		System.out.println("Datagram service port" + ds.getPort());
 		ds.sendDatagram(datagram);
 		datagram = ds.receiveDatagram();		
 		System.out.println("Received " + datagram.getData());
@@ -105,13 +104,12 @@ public class TTPSegmentService {
 			ack.setData(ackSeg);			
 			ds.sendDatagram(ack);
 			System.out.println("Sent datagram at dst port " + ack.getDstport());
-			System.out.println("Datagram service port" + ds.getPort());
 			System.out.println("Server : Sending datagram");
 			
 			datagram = ds.receiveDatagram();		
 			System.out.println("Received datagram from " + datagram.getSrcaddr() + ":" + datagram.getSrcport() + " Data: " + datagram.getData());
 			rcvSegment = (TTPSegment)datagram.getData();
-			System.out.println("Flag received is " + rcvSegment.getFlags());
+			System.out.println("Connection Established Flag received is " + rcvSegment.getFlags());
     	}
     	else
     	{
@@ -119,6 +117,70 @@ public class TTPSegmentService {
     	}
 		
 	}
+    
+    
+    public void destroyConnection()  throws IOException, ClassNotFoundException
+    {
+    	/* Check for the error condition when the client send the SYN packet
+    	 * even when the connection is open */
+    	
+    	Datagram datagram = ds.receiveDatagram();
+		System.out.println("Received datagram from " + datagram.getSrcaddr() + ":" + datagram.getSrcport() + " Data: " + datagram.getData());    	
+    	TTPSegment rcvSegment = (TTPSegment)datagram.getData();
+    	
+    	/* Checking for a FIN packet */
+    	if(rcvSegment.getFlags() == 1)
+    	{
+	    	String data = "";
+			int seqNumber = 200;
+			int ackNumber = rcvSegment.getSeqNumber() + 1;			
+			byte flag = 16;
+			TTPSegment ackSeg = new TTPSegment(datagram.getDstport(), datagram.getSrcport(), seqNumber, ackNumber, (byte)16,  flag,  (short)750, (Object)data);	
+			Datagram ack = new Datagram();
+			ack.setSrcaddr(datagram.getDstaddr());
+			ack.setDstaddr(datagram.getSrcaddr());
+			ack.setDstport(datagram.getSrcport());
+			ack.setSrcport(datagram.getDstport());
+			ack.setData(ackSeg);			
+			ds.sendDatagram(ack);
+			System.out.println("Server : Sending datagram ACK");
+			
+			
+			/* Check if the server has any more bytes to send to the server */
+			
+			
+			/* Send another packet with a FIN status */
+
+	    	data = "";
+		    seqNumber = 201;
+			ackNumber = rcvSegment.getSeqNumber() + 2;			
+			flag = 1;
+			ackSeg = new TTPSegment(datagram.getDstport(), datagram.getSrcport(), seqNumber, ackNumber, (byte)16,  flag,  (short)750, (Object)data);	
+			ack.setData(ackSeg);			
+			ds.sendDatagram(ack);
+			System.out.println("Server : Sending datagram FIN");
+			
+						
+			/* Wait for an ACK from client */
+			datagram = ds.receiveDatagram();		
+			System.out.println("Received datagram from " + datagram.getSrcaddr() + ":" + datagram.getSrcport() + " Data: " + datagram.getData());
+			rcvSegment = (TTPSegment)datagram.getData();
+			if(rcvSegment.getFlags() == 16)
+	    	{
+				System.out.println("Closing Connection Flag received is " + rcvSegment.getFlags());
+				// Close the connection
+				
+	    	}
+			else
+			{
+	    		System.out.println("Error : wrong flag received : " + rcvSegment.getFlags());
+			}
+    	}
+    	else
+    	{
+    		System.out.println("Error : wrong flag received : " + rcvSegment.getFlags());
+    	}
+    }
 		
 
 }
