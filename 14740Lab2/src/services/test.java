@@ -57,6 +57,7 @@ System.out.println( "Input a string within 10 seconds: " );
 datagram= ds.receiveDatagram();
 System.out.println( "Recieved\n");   
 timer.cancel();
+System.out.println("\nblahblah\n");
 }  
 
 

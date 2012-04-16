@@ -27,12 +27,12 @@ public class TTPSegmentService{
 		super();
 		ds = new DatagramService(port, verbose);
 	}
-		
+
 	public DatagramService getDS()
 	{
 		 return ds;
 	}
-		
+
     public void createConnection(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
 	{
 		String data ="";
@@ -40,9 +40,9 @@ public class TTPSegmentService{
 		int ackNumber = 0;			
 		byte flag = 2;
 		int serverSeqNumber;	
-			
+
 		TTPSegment seg = new TTPSegment(srcPort, dstPort, seqNumber, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
-			
+
 		Datagram datagram = new Datagram();
 		datagram.setSrcaddr(srcAddr);
 		datagram.setDstaddr(dstAddr);
@@ -53,8 +53,8 @@ public class TTPSegmentService{
 		ds.sendDatagram(datagram);
 		datagram = ds.receiveDatagram();		
 		System.out.println("Received " + datagram.getData());
-		
-		
+
+
 		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
 		if(ackSeg.getFlags() == 18)
 		{
@@ -72,8 +72,8 @@ public class TTPSegmentService{
             seg.setDstport(dstPort);
 			seg.setSeqNumber(seqNumber+1);
 			seg.setAckNumber(serverSeqNumber + 1);
-			
-			
+
+
 			datagram.setSrcport(srcPort);
 			datagram.setDstport(dstPort);
 			datagram.setSrcaddr(srcAddr);
@@ -116,7 +116,7 @@ public class TTPSegmentService{
 			System.out.println("Sent datagram at dst port " + ack.getDstport());
 			System.out.println("Datagram service port" + ds.getPort());
 			System.out.println("Server : Sending datagram");
-			
+
 			datagram = ds.receiveDatagram();		
 			System.out.println("Received datagram from " + datagram.getSrcaddr() + ":" + datagram.getSrcport() + " Data: " + datagram.getData());
 			rcvSegment = (TTPSegment)datagram.getData();
@@ -126,9 +126,9 @@ public class TTPSegmentService{
     	{
     		System.out.println("Error : wrong flag received : " + rcvSegment.getFlags());
     	}
-		
+
 	}
-		
+
 
     public void initiateDestroy(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
     {
@@ -140,7 +140,7 @@ public class TTPSegmentService{
     	//Dummmy data.Should be changed
 		int seqNumber=100;
 		int ackNumber = 1000;			
-		
+
 		byte flag = 1;
     	
 		TTPSegment seg = new TTPSegment(srcPort, dstPort, seqNumber, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
@@ -152,21 +152,21 @@ public class TTPSegmentService{
 		datagram.setData(seg);		
 		System.out.println("Datagram service port" + ds.getPort());
 		ds.sendDatagram(datagram);
-		
+
 		//Should start timer now to wait for 2MSL that is 120 seconds
-		
-		
+
+
 		try{  
 			(new test(ds)).getInput();  
 			}  
 			catch( Exception e ){  
 			System.out.println( e );  
 			}  
-		
-		
-		
-		
-		
+
+
+
+
+
 	    //ds.receiveDatagram();	
     	
     	 
@@ -176,5 +176,4 @@ public class TTPSegmentService{
     
     
 }
-
 
