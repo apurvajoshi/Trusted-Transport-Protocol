@@ -1,3 +1,4 @@
+
 /*
  * A sample client that uses DatagramService
  */
@@ -40,3 +41,8 @@ public class client {
 		System.exit(-1);
 	}
 }
+
+/*
+ * A sample client that uses DatagramService
+ */
+
