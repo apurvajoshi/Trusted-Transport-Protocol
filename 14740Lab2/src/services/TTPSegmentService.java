@@ -6,20 +6,22 @@
  *  replace this file with out own version. So DO NOT make any changes to the
  *  function prototypes
  */
+
 package services;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.Arrays;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import services.test;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 
 public class TTPSegmentService{
+	
+	
+	/* Definition of all constant variables */
+	public static final byte SYN_ACK = 18;
+	public static final byte ACK = 16;
+	public static final byte SYN = 2;
 
 	private DatagramService ds;
 
@@ -33,59 +35,18 @@ public class TTPSegmentService{
 		 return ds;
 	}
 
-    public void createConnection(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
-	{
-		String data ="";
-		int seqNumber=1;
-		int ackNumber = 0;			
-		byte flag = 2;
-		int serverSeqNumber;	
-
-		TTPSegment seg = new TTPSegment(srcPort, dstPort, seqNumber, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
-
-		Datagram datagram = new Datagram();
-		datagram.setSrcaddr(srcAddr);
-		datagram.setDstaddr(dstAddr);
-		datagram.setDstport(dstPort);
-		datagram.setSrcport(srcPort);
-		datagram.setData(seg);		
-		ds.sendDatagram(datagram);
-		datagram = ds.receiveDatagram();		
-		System.out.println("Received " + datagram.getData());
-
-
-		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
-		if(ackSeg.getFlags() == 18)
-		{
-			//Syn + Ack
-			System.out.println("Connection established.");
-			//Send the next acknowledgement
-
-			//Making use of the same datagram.Is this fine?
-			serverSeqNumber = ackSeg.getSeqNumber();
-			seg.setFlags((byte)16);
-
-
-			//Initially assume one byte is read
-            seg.setSrcport(srcPort);
-            seg.setDstport(dstPort);
-			seg.setSeqNumber(seqNumber+1);
-			seg.setAckNumber(serverSeqNumber + 1);
-
-
-			datagram.setSrcport(srcPort);
-			datagram.setDstport(dstPort);
-			datagram.setSrcaddr(srcAddr);
-			datagram.setDstaddr(dstAddr);
-			datagram.setData(seg);
-			ds.sendDatagram(datagram);
-		}
-		else
-		{
-
-			//ERROR
-			System.out.println("Error");
-		}
+    
+	/* This function is used by the client to initiate a connection with the server */
+    public void createConnection(short srcPort,short dstPort,String srcAddr,String dstAddr)
+	{			
+		/* Sending datagram */
+		SenderThread senderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
+		senderThread.createSegment(0, SYN, "");
+		senderThread.send();
+		
+		/* Create a receiver thread */
+		ReceiverThread receiverThread = new ReceiverThread(this.ds, senderThread);
+		receiverThread.start();
 	}
     
     public void acceptConnection() throws IOException, ClassNotFoundException
@@ -200,7 +161,6 @@ public class TTPSegmentService{
     	
     	String data ="";
     	 
-    	
     	//Dummmy data.Should be changed
 		int seqNumber=100;
 		int ackNumber = 1000;			
@@ -218,16 +178,16 @@ public class TTPSegmentService{
 
 		//Should start timer now to wait for 2MSL that is 120 seconds
 
-
 		try{  
 			(new test(ds)).getInput();  
 			}  
 			catch( Exception e ){  
 			System.out.println( e );  
-			}  
 
-	    //ds.receiveDatagram();	
-    	
+			}  	
+		
+
+ 
    	
     }
     
