@@ -24,20 +24,13 @@ public class server {
 		int port = Integer.parseInt(args[0]);*/
 		
 		System.out.println("Starting Server ...");
-
+		ts = new TTPSegmentService(serverPort, 10);
 		run();
 	}
 
-	private static void run() throws IOException, ClassNotFoundException {
-		
-		serverSocket = new ServerSocket(serverPort);
-		
+	private static void run() throws IOException, ClassNotFoundException {		
 		while(true) {
-			System.out.println("Here1");
-            Socket client = serverSocket.accept();
-    		System.out.println("Here2");
             // Span a new thread to service the request
-			ts = new TTPSegmentService(serverPort, 10);
 			ts.acceptConnection();
 			
 		}
