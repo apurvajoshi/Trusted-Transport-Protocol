@@ -30,7 +30,7 @@ public class ServerReceiverThread extends Thread {
 		}
 		else
 		{
-			 senderThread.createSegment(ackSeg.getSeqNumber(),TTPSegmentService.FIN_ACK,"");
+			 senderThread.createSegment(ackSeg.getSeqNumber(),TTPSegmentService.ACK_FIN,"");
 		     wait_for_final_ack = 1;
 			 senderThread.send();
 		}
