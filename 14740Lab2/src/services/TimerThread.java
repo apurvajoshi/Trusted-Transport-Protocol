@@ -8,7 +8,7 @@ import datatypes.TTPSegment;
 public class TimerThread {
     public Timer timer;
 	public SenderThread senderThread;
-	
+
     public TimerThread(SenderThread senderThread , TTPSegment seg, int seconds) {
 		this.senderThread = senderThread;
         timer = new Timer();

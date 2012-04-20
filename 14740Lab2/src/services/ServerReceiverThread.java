@@ -5,7 +5,8 @@ import java.io.IOException;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 
-public class ReceiverThread extends Thread {
+public class ServerReceiverThread extends Thread {
+
 
 
 
@@ -14,7 +15,7 @@ public class ReceiverThread extends Thread {
 	public SenderThread senderThread;
 	public int wait_for_final_ack;
 
-	public ReceiverThread(DatagramService ds, SenderThread senderThread)
+	public ServerReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
 		this.ds = ds;
 		this.senderThread = senderThread;
@@ -90,4 +91,7 @@ public class ReceiverThread extends Thread {
 			}
     	}
     }
+	
+	
+	
 }

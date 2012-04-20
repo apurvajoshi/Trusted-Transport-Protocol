@@ -1,4 +1,3 @@
-
 /*
  * A sample server that uses DatagramService
  */
@@ -23,7 +22,7 @@ public class server {
 		}
 		
 		int port = Integer.parseInt(args[0]);*/
-		
+
 		System.out.println("Starting Server ...");
 		ts = new TTPSegmentService(serverPort, 10);
 		run();
@@ -32,10 +31,10 @@ public class server {
 	private static void run() throws IOException, ClassNotFoundException {		
 		while(true) {
             // Span a new thread to service the request
-			ts.acceptConnection();
-			
+		//	ts.acceptConnection((short)6001, (short)6000,"127.0.0.1","127.0.0.1");
+           ts.acceptConnection((short)6001, (short)6000,"127.0.0.1","127.0.0.1");
 		}
-		
+
 	}
 
 	private static void printUsage() {
@@ -43,4 +42,3 @@ public class server {
 		System.exit(-1);
 	}
 }
-

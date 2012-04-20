@@ -49,7 +49,6 @@ public class test extends Thread {
 
 public void getInput() throws Exception{  
 Timer timer = new Timer();  
-System.out.println("NANANNANAN");
 //For now 20 seconds
 timer.schedule( task, 20*1000 );  
   

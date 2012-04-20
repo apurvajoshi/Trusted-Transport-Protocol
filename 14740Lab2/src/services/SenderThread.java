@@ -9,7 +9,7 @@ import datatypes.TTPSegment;
 public class SenderThread {
 
 	/* Definition of all constant variables */
-	
+
 	public DatagramService ds;
 	public short srcPort;
 	public short dstPort;
@@ -18,7 +18,7 @@ public class SenderThread {
 	public int seqNo;
 	public TTPSegment seg;
     public Timer timer;
-	
+
 	public SenderThread (DatagramService ds, short srcPort, short dstPort, String srcAddr, String dstAddr)
 	{
 		this.ds = ds;
@@ -28,12 +28,12 @@ public class SenderThread {
 		this.srcAddr = srcAddr;
 		this.dstAddr = dstAddr;
 	}
-	
+
 	public void setTTPSegment(TTPSegment seg)
 	{
 		this.seg = seg;
 	}
-	
+
 	public Datagram createDatagram(TTPSegment seg)
 	{
 		Datagram datagram = new Datagram();
@@ -44,17 +44,17 @@ public class SenderThread {
 		datagram.setData(seg);	
 		return datagram;
 	}
-	
+
 	public TTPSegment createSegment(int ackNumber, byte flag, Object data)
 	{
 		this.seg = new TTPSegment(this.srcPort, this.dstPort, this.seqNo, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
 		return this.seg;
 	}
-	
+
     public void send() {
     	try {
 			ds.sendDatagram(createDatagram(this.seg));
-			
+
 			/* Create a time thread */
 	        this.timer = new Timer();
 			TimeoutTask t = new TimeoutTask(createDatagram(this.seg));
