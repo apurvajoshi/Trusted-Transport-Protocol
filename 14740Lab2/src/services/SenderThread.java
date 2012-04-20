@@ -47,6 +47,7 @@ public class SenderThread {
 	
 	public TTPSegment createSegment(int ackNumber, byte flag, Object data)
 	{
+		this.seqNo++;
 		this.seg = new TTPSegment(this.srcPort, this.dstPort, this.seqNo, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
 		return this.seg;
 	}

@@ -11,7 +11,6 @@ package services;
 
 import java.io.IOException;
 import java.net.SocketException;
-import services.test;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 
@@ -22,8 +21,15 @@ public class TTPSegmentService{
 	public static final byte SYN_ACK = 18;
 	public static final byte ACK = 16;
 	public static final byte SYN = 2;
+	public static final byte FIN = 1;
+	public static final byte ACK_FIN = 17;
+	public static final long MSL = 120;
+    public static final long TIMEOUT = 2 * MSL;
 
+	
 	private DatagramService ds;
+	private SenderThread clientSenderThread;
+	private ClientReceiverThread clientReceiverThread;
 
 	public TTPSegmentService(int port, int verbose) throws SocketException  {
 		super();
@@ -39,13 +45,13 @@ public class TTPSegmentService{
     public void createConnection(short srcPort,short dstPort,String srcAddr,String dstAddr)
 	{			
 		/* Sending datagram */
-		SenderThread senderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
-		senderThread.createSegment(0, SYN, "");
-		senderThread.send();
+		clientSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
+		clientSenderThread.createSegment(0, SYN, "");
+		clientSenderThread.send();
 		
 		/* Create a receiver thread */
-		ReceiverThread receiverThread = new ReceiverThread(this.ds, senderThread);
-		receiverThread.start();
+		clientReceiverThread = new ClientReceiverThread(this.ds, clientSenderThread);
+		clientReceiverThread.start();
 	}
     
     public void acceptConnection() throws IOException, ClassNotFoundException
@@ -155,37 +161,9 @@ public class TTPSegmentService{
 
     public void initiateDestroy(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
     {
-    
-    	
-    	String data ="";
-    	 
-    	//Dummmy data.Should be changed
-		int seqNumber=100;
-		int ackNumber = 1000;			
-		
-		byte flag = 1;
-    	
-		TTPSegment seg = new TTPSegment(srcPort, dstPort, seqNumber, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
-		Datagram datagram = new Datagram();
-		datagram.setSrcaddr(srcAddr);
-		datagram.setDstaddr(dstAddr);
-		datagram.setDstport(dstPort);
-		datagram.setSrcport(srcPort);
-		datagram.setData(seg);		
-		ds.sendDatagram(datagram);
-		
-		//Should start timer now to wait for 2MSL that is 120 seconds
-		
-		try{  
-			(new test(ds)).getInput();  
-			}  
-			catch( Exception e ){  
-			System.out.println( e );  
-			}  		
-		
-	    //ds.receiveDatagram();	
-    	
-    	 
+		/* Sending datagram */
+		clientSenderThread.createSegment(0, FIN, "");
+		clientSenderThread.send();
     	
     }
     
