@@ -10,6 +10,8 @@ import services.TTPSegmentService;
 public class client {
 
 	private static TTPSegmentService ts;
+	private static final short serverPort = 6000;
+	public static final short clientPort = 6001;
 	
 	/**
 	 * @param args
@@ -24,13 +26,9 @@ public class client {
 		
 		System.out.println("Starting client ...");
 
-		ts = new TTPSegmentService(6001,10);		
-		ts.createConnection((short)6001, (short)6000,"127.0.0.1","127.0.0.1");
-		ts.initiateDestroy((short)6001, (short)6000, "127.0.0.1", "127.0.0.1");
-
-		/*ts = new TTPSegmentService(port,10);
-		ts.createConnection((short)port,(short)Integer.parseInt(args[1]),"127.0.0.1","127.0.0.1");
-		ts.initiateDestroy((short)port, (short)Integer.parseInt(args[1]), "127.0.0.1", "127.0.0.1");*/
+		ts = new TTPSegmentService(clientPort,10);		
+		ts.createConnection(clientPort, serverPort,"127.0.0.1","127.0.0.1");
+		//ts.closeConnection();
 	}
 	
 	private static void printUsage() {

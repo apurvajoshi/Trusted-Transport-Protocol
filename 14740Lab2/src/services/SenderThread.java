@@ -28,6 +28,11 @@ public class SenderThread {
 		this.srcAddr = srcAddr;
 		this.dstAddr = dstAddr;
 	}
+	
+	public void setDstPort(short port)
+	{
+		this.dstPort = port;
+	}
 
 	public void setTTPSegment(TTPSegment seg)
 	{

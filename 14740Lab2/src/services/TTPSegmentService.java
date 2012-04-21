@@ -12,7 +12,6 @@ package services;
 import java.io.IOException;
 import java.net.SocketException;
 import datatypes.Datagram;
-import datatypes.TTPSegment;
 
 public class TTPSegmentService{
 	/* Definition of all constant variables */
@@ -55,23 +54,17 @@ public class TTPSegmentService{
 	}
     
     /*This function is used by the server to accept the connection with the server*/
-    public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
+    public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr)
 	{
-    
-    	/*Modified Code*/
-    	/*Initial blocking call waiting for the first SYN packet.Should we do check here for SYN?*/
-    	Datagram datagram = ds.receiveDatagram(); 
-    	/*Once received initialize a new sender and receiver thread*/
+      	/* Initialize a new sender and receiver thread*/
     	serverSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
 		serverSenderThread.createSegment(0, SYN_ACK, "");
 		serverSenderThread.send();
     	serverReceiverThread = new ServerReceiverThread(this.ds, serverSenderThread);
-		serverReceiverThread.start();
-    	
-    	/*End of modified code */
+		serverReceiverThread.start();    	
 	}
 		
-    public void initiateDestroy(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
+    public void closeConnection()
     {
 		/* Sending datagram */
 		clientSenderThread.createSegment(0, FIN, "");

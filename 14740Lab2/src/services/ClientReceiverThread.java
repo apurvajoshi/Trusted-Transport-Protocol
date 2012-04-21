@@ -31,20 +31,29 @@ public class ClientReceiverThread extends Thread {
 	       		
 	       		switch(ackSeg.getFlags()) {
 	    		case TTPSegmentService.SYN_ACK: 
-	    			System.out.println("Connection established.");
+	    			System.out.println("Client received  SYN_ACK.");
+	    			System.out.println("Client Connection established." + ackSeg.getSrcport());
 	    			/* Send the next acknowledgment */
+	    			senderThread.setDstPort(ackSeg.getSrcport());
 	    			senderThread.createSegment(ackSeg.getSeqNumber(), TTPSegmentService.ACK, "");
 	    			senderThread.sendWithoutTimeout();
+	    			System.out.println("Client closing connection");
+	    			senderThread.createSegment(0, TTPSegmentService.FIN, "");
+	    			senderThread.send();
 	    			break;
 	    			
 	    		case TTPSegmentService.ACK:
+	    			System.out.println("Client received  ACK.");
 	    			/* Do nothing */
 	    			break;
+	    			
 	    		case TTPSegmentService.FIN:
+	    			System.out.println("Client received FIN.");
+
 	    			senderThread.createSegment(ackSeg.getSeqNumber(), TTPSegmentService.ACK, "");
 	    			senderThread.sendWithoutTimeout();
 	    			try {
-						wait(TTPSegmentService.TIMEOUT * 1000);
+						sleep(TTPSegmentService.TIMEOUT * 1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						System.out.println("Issues in waiting.");
@@ -52,10 +61,11 @@ public class ClientReceiverThread extends Thread {
 					}
 	    			break;
 	    		case TTPSegmentService.ACK_FIN:
+	    			System.out.println("Client received ACK_FIN.");
 	    			senderThread.createSegment(ackSeg.getSeqNumber(), TTPSegmentService.ACK, "");
 	    			senderThread.sendWithoutTimeout();
 	    			try {
-						wait(TTPSegmentService.TIMEOUT * 1000);
+						sleep(TTPSegmentService.TIMEOUT * 1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						System.out.println("Issues in waiting.");
