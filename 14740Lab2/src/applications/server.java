@@ -8,13 +8,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import services.TTPSegmentService;
+import java.util.List;
 
 public class server {
 
 	public static TTPSegmentService ts;
     public static ServerSocket serverSocket = null;   
     private static int serverPort   = 6000;
-
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 
 		/*if(args.length != 1) {
@@ -31,7 +31,7 @@ public class server {
 	private static void run() throws IOException, ClassNotFoundException {		
 		while(true) {
             // Span a new thread to service the request
-		//	ts.acceptConnection((short)6001, (short)6000,"127.0.0.1","127.0.0.1");
+		
            ts.acceptConnection((short)6001, (short)6000,"127.0.0.1","127.0.0.1");
 		}
 

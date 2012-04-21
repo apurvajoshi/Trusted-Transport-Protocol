@@ -62,22 +62,44 @@ public class TTPSegmentService{
     	/*Initial blocking call waiting for the first SYN packet.Should we do check here for SYN?*/
     	Datagram datagram = ds.receiveDatagram(); 
     	/*Once received initialize a new sender and receiver thread*/
-    	serverSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
+    	TTPSegment ackSeg=(TTPSegment)(datagram.getData());
+    	if(ackSeg.getFlags() == TTPSegmentService.SYN)
+    	{
+    	/*Currently put dummy source port*/
+    	serverSenderThread = new SenderThread(this.ds, (short)9000, dstPort, srcAddr, dstAddr);
 		serverSenderThread.createSegment(0, SYN_ACK, "");
 		serverSenderThread.send();
     	serverReceiverThread = new ServerReceiverThread(this.ds, serverSenderThread);
 		serverReceiverThread.start();
-    	
+    	}
+    	return;
     	/*End of modified code */
 	}
 		
-    public void initiateDestroy(short srcPort,short dstPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
+    public void initiateDestroy() throws IOException, ClassNotFoundException
     {
 		/* Sending datagram */
 		clientSenderThread.createSegment(0, FIN, "");
 		clientSenderThread.send();
     	
-    }    
+    }   
+    
+    
+    public void clientSendFileRequest()
+    {
+    	/*Inserted dummy values*/
+        final String filename = "a.txt";
+    	clientSenderThread.createSegment(3, ACK ,filename);
+    	clientSenderThread.send();
+    }
+    public int serverCheckFilePresent(String filename)
+    {
+    /*Check in a list whether the file is present and if yes then 
+     * send the file.	 
+     */
+    	return 1;
+    	
+    }
     
     
 }

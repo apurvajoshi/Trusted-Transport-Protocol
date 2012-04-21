@@ -8,8 +8,6 @@ import datatypes.TTPSegment;
 public class ServerReceiverThread extends Thread {
 
 
-
-
 	private static final boolean DATA_TO_BE_SENT = false;
 	public DatagramService ds;
 	public SenderThread senderThread;
@@ -78,8 +76,10 @@ public class ServerReceiverThread extends Thread {
 	       		
 	       		/*Close connection*/
 	       		if(wait_for_final_ack == 1)
+	       		{  
+	       			System.out.println("\n Closing connection");
 	       			 break;
-
+	       		}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				System.out.println("IOException in receiving data");
