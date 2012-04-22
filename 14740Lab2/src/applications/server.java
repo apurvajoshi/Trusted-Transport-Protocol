@@ -3,6 +3,7 @@
  */
 package applications;
 
+import java.io.File;
 import java.io.IOException;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
@@ -17,6 +18,7 @@ public class server {
     private static final short serverRespondPort = 6000;
 	public static final short clientPort = 6001;
 	public String[] filenames = {"a.txt","b.txt","c.txt"};
+
 
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
@@ -38,16 +40,30 @@ public class server {
 		{
 			/* Initial blocking call waiting for the first SYN packet. */
 	       	Datagram datagram = ts.getDS().receiveDatagram(); 
+	       	
+	       	/* Set the server state to LISTEN */
+	       	TTPSegmentService.serverState = TTPSegmentService.LISTEN;
+	       	
 	       	TTPSegment ackSeg=(TTPSegment)(datagram.getData());
 	       	if(ackSeg.getFlags() == TTPSegmentService.SYN)
 	       	{
 	       		/* Create a new connection */
 	       		System.out.println("Received SYN from client");
-	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1");
+	       			       		
+	       		/* Accept connection - > set the received sequence number + 1 as the acknowledgment number*/
+	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1", ackSeg.getSeqNumber()+1);
+	    		System.out.println("Server Connection established.\n\n");
+
 	       	}
-
+	       	
+	       	/*Connection established.Now recieve filename and read it into a byte array*/
+	       	File file = new File("a.txt");
+	      
+	       	ts.sendFile(file);
+	       	
+	       	  
+	       	
 		}
-
 	}
 
 	private static void printUsage() {

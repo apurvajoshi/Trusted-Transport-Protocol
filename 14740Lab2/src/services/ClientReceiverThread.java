@@ -11,7 +11,9 @@ public class ClientReceiverThread extends Thread {
 	
 	public DatagramService ds;
 	public SenderThread senderThread;
-	
+	/*Used to check whether this is the first time*/
+	private int first_time =0;
+	private String filename ;
 	
 	public ClientReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
@@ -25,55 +27,97 @@ public class ClientReceiverThread extends Thread {
     		Datagram datagram;
     		try {
 				datagram = ds.receiveDatagram();
-				senderThread.timer.cancel();
+				senderThread.timeoutTask.cancel();
 				System.out.println("Received " + datagram.getData());
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
 	       		
 	       		switch(ackSeg.getFlags()) {
+	       		
 	    		case TTPSegmentService.SYN_ACK: 
 	    			System.out.println("Client received  SYN_ACK.");
-	    			System.out.println("Client Connection established." + ackSeg.getSrcport());
+	    			
 	    			/* Send the next acknowledgment */
-	    			senderThread.setDstPort(ackSeg.getSrcport());
-	    			senderThread.createSegment(ackSeg.getSeqNumber(), TTPSegmentService.ACK, "");
-	    			senderThread.sendWithoutTimeout();
-	    			/*Extra code*/
-	    			  
-	    			 
-	    			    	/*Inserted dummy values*/
-	    			        final String filename = "a.txt";
-	    			    	senderThread.createSegment(3, TTPSegmentService.ACK ,filename);
-	    			    	senderThread.send();
-	    			  
-	    			 /*Extra code ends*/
-	    			/*System.out.println("Client closing connection");
-	    			senderThread.createSegment(0, TTPSegmentService.FIN, "");
+	//senderThread.setDstPort(ackSeg.getSrcport());
+	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
 	    			senderThread.send();
-	    			*/
+	    			
+	    			/* Set client state to established */
+	    			TTPSegmentService.clientState = TTPSegmentService.ESTABLISHED;
+
 	    			break;
 	    			
 	    		case TTPSegmentService.ACK:
 	    			System.out.println("Client received  ACK.");
+	    			
+	    			/*Check if this is the first packet to be sent after connection is established*/
+	    		    /* if(TTPSegmentService.clientState == TTPSegmentService.ESTABLISHED && first_time == 0)
+	    		     {
+	    			first_time = 1;
+	    			
+	    			filename = "a.txt";
+	    			System.out.println("\nMust send filename\n");
+	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, filename);
+	    		    senderThread.send();
+	    		     }*/
+	    			
+	    			/* Make sure if received ACK  is for FIN */
+	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1 && 
+	    					ackSeg.getData().toString().equals("FIN"))
+	    			{
+		    			System.out.println("Client FIN_WAIT_2.");
+	    				TTPSegmentService.clientState = TTPSegmentService.FIN_WAIT_2;
+
+	    			}
+	    			else if (TTPSegmentService.clientState == TTPSegmentService.CLOSING &&
+	    					ackSeg.getData().toString().equals("FIN"))
+	    			{
+	    				TTPSegmentService.clientState = TTPSegmentService.TIME_WAIT;
+	    				try {
+							sleep(TTPSegmentService.TIMEOUT * 1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							System.out.println("Issues in waiting.");
+							e.printStackTrace();
+						}
+	    			}
+	    			
 	    			/* Do nothing */
 	    			break;
 	    			
 	    		case TTPSegmentService.FIN:
 	    			System.out.println("Client received FIN.");
 
-	    			senderThread.createSegment(ackSeg.getSeqNumber(), TTPSegmentService.ACK, "");
-	    			senderThread.sendWithoutTimeout();
-	    			try {
-						sleep(TTPSegmentService.TIMEOUT * 1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						System.out.println("Issues in waiting.");
-						e.printStackTrace();
-					}
+
+	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1)
+	    			{
+	    				senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, ackSeg.getData());
+		    			senderThread.send();
+	    				TTPSegmentService.clientState = TTPSegmentService.CLOSING;
+	    			}
+	    			else if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_2)
+	    			{
+	    				senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, ackSeg.getData()); 
+		    			senderThread.send();
+	    				TTPSegmentService.clientState = TTPSegmentService.TIME_WAIT;
+		    			System.out.println("Client TIME_WAIT.");
+	    				try {
+							sleep(TTPSegmentService.TIMEOUT * 1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							System.out.println("Issues in waiting.");
+							e.printStackTrace();
+						}
+	    				
+	    			}
+	    			
 	    			break;
 	    		case TTPSegmentService.ACK_FIN:
 	    			System.out.println("Client received ACK_FIN.");
-	    			senderThread.createSegment(ackSeg.getSeqNumber(), TTPSegmentService.ACK, "");
-	    			senderThread.sendWithoutTimeout();
+	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			senderThread.send();
+	    			
+	    			/* Set the state to TIME WAIT */
+	    			TTPSegmentService.clientState = TTPSegmentService.TIME_WAIT;
 	    			try {
 						sleep(TTPSegmentService.TIMEOUT * 1000);
 					} catch (InterruptedException e) {
@@ -84,8 +128,13 @@ public class ClientReceiverThread extends Thread {
 	    			break;
 	    		}
 	       		
-	       		if(ackSeg.getFlags() == TTPSegmentService.FIN || ackSeg.getFlags() == TTPSegmentService.ACK_FIN)
-	       			break;
+	       		if(TTPSegmentService.clientState == TTPSegmentService.TIME_WAIT)
+	       		{
+	       			/* Set the state to Closed */
+	    			TTPSegmentService.clientState = TTPSegmentService.CLOSED;
+	    			System.out.println("Client Closed.");
+	    			break;
+	       		}
 	       		
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

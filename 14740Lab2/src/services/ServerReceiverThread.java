@@ -14,24 +14,14 @@ public class ServerReceiverThread extends Thread {
 	public SenderThread senderThread;
 	public int wait_for_final_ack = 0;
 	public int final_ack_recieved=0;
+	public int server_first_time=0;
+	public static String fileName ;
     
 	public ServerReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
 		this.ds = ds;
 		this.senderThread = senderThread;
 	}
-	public void destroyConnection(TTPSegment ackSeg)  throws IOException, ClassNotFoundException
-    {
-		/* Check if there is data to be sent */
-
-		/* If yes then send data with ACK flag */
-		
-		/* If no then respond with FIN ACK MSG*/
-		senderThread.createSegment(ackSeg.getSeqNumber(),TTPSegmentService.ACK_FIN,"");
-	    wait_for_final_ack = 1;
-	    senderThread.sendWithoutTimeout();
-    }
-
 
     public void run() {    	
     	while(true)
@@ -39,39 +29,60 @@ public class ServerReceiverThread extends Thread {
     		Datagram datagram;
     		try {
 				datagram = ds.receiveDatagram();
-				senderThread.timer.cancel();
+				senderThread.timeoutTask.cancel();
 				System.out.println("Server Received " + datagram.getData());
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
 
 	       		switch(ackSeg.getFlags()) {
 	    		case TTPSegmentService.ACK:
-	    			  System.out.println("Server received ACK");
-	    			  //If current state is just connection established then data will have filename.Perform a check
-	    			  //Read data into buffer by using readFileAsString.Keep this buffer.Start segmentation and keep track of offset.
+
+	    			  System.out.println("Server received ACK");	
 	    			  
-	    		   		/* Close connection */
-	  	       		if(wait_for_final_ack == 1)
-	  	       		{  
-	  	       			System.out.println("\n Closing connection");
-	  	       			final_ack_recieved=1;
-	  	       			 break;
-	  	       		}
+	   
+	    			  
+	    			  /* Set the server state to ESTABLISHED */
+	    			  if(TTPSegmentService.serverState == TTPSegmentService.SYN_RECEIVED)
+	    				  TTPSegmentService.serverState = TTPSegmentService.ESTABLISHED;
+	    			  else if (TTPSegmentService.serverState == TTPSegmentService.LAST_ACK && 
+	    					  ackSeg.getData().toString().equals("FIN"))
+	    			  {
+			    			System.out.println("Server closed.");
+		    			  TTPSegmentService.serverState = TTPSegmentService.CLOSED;
+	    			  }
+
 	    			  break;
 	    			  
 	    		case TTPSegmentService.FIN:
 	    			  System.out.println("Server received FIN");
-	    			  destroyConnection(ackSeg);
+	    			  senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1,TTPSegmentService.ACK, ackSeg.getData());
+	    			  senderThread.send();
+
+	    			  TTPSegmentService.serverState = TTPSegmentService.CLOSE_WAIT;
+	    			  
+	    			  /* 
+	    			   * 
+	    			   * Send data if anything is remaining.
+	    			   * 
+	    			   * 
+	    			   */
+
+	    			  
+	    			  senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.FIN,"FIN");
+	    			  senderThread.send();
+	    			  TTPSegmentService.serverState = TTPSegmentService.LAST_ACK;
 	    			  break;
 	    			  
 	    		}
 	       		
-	       		if(final_ack_recieved == 1)
-  	       		{  
-  	       			System.out.println("\n Closing connection");
-  	       			final_ack_recieved=1;
-  	       			 break;
-  	       		}
-	    
+
+	       		/* Close connection */
+	       		if(TTPSegmentService.serverState == TTPSegmentService.CLOSED)
+	       		{
+	       			senderThread.timer.cancel();
+		    		System.out.println("Server closed connection");
+	       			break;
+	       		}
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				System.out.println("IOException in server receiving data");
@@ -83,20 +94,6 @@ public class ServerReceiverThread extends Thread {
 			}
     	}
     }
-    private static String readFileAsString(String filePath)
-    throws java.io.IOException{
-        StringBuffer fileData = new StringBuffer(1000);
-        BufferedReader reader = new BufferedReader(
-                new FileReader(filePath));
-        char[] buf = new char[1024];
-        int numRead=0;
-        while((numRead=reader.read(buf)) != -1){
-            String readData = String.valueOf(buf, 0, numRead);
-            fileData.append(readData);
-            buf = new char[1024];
-        }
-        reader.close();
-        return fileData.toString();
-    }
+
 	
 }

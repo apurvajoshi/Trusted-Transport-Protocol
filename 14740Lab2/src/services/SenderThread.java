@@ -15,18 +15,18 @@ public class SenderThread {
 	public short dstPort;
 	public String srcAddr;
 	public String dstAddr;
-	public int seqNo;
 	public TTPSegment seg;
     public Timer timer;
+    public TimeoutTask timeoutTask;
 
 	public SenderThread (DatagramService ds, short srcPort, short dstPort, String srcAddr, String dstAddr)
 	{
 		this.ds = ds;
-		this.seqNo = 0;
 		this.srcPort = srcPort;
 		this.dstPort = dstPort;
 		this.srcAddr = srcAddr;
 		this.dstAddr = dstAddr;
+        this.timer = new Timer();
 	}
 	
 	public void setDstPort(short port)
@@ -50,22 +50,19 @@ public class SenderThread {
 		return datagram;
 	}
 
-	public TTPSegment createSegment(int ackNumber, byte flag, Object data)
-	{
-		this.seqNo++;
-		this.seg = new TTPSegment(this.srcPort, this.dstPort, this.seqNo, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
+	public TTPSegment createSegment(int seqNo, int ackNumber, byte flag, Object data)
+	{		
+		this.seg = new TTPSegment(this.srcPort, this.dstPort, seqNo, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
 		return this.seg;
 	}
 
     public void send() {
     	try {
 			ds.sendDatagram(createDatagram(this.seg));
-
-			/* Create a time thread */
-	        this.timer = new Timer();
-			TimeoutTask t = new TimeoutTask(createDatagram(this.seg));
+			
+			this.timeoutTask = new TimeoutTask(createDatagram(this.seg));
 			System.out.println("Timer started");
-		    timer.schedule(t, 5*1000, 5*1000);
+		    timer.schedule(timeoutTask, 5*1000, 5*1000);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			System.out.println("Exception in sending datagram");
@@ -102,6 +99,7 @@ public class SenderThread {
 			}
             //timer.cancel(); //Terminate the timer thread
         }
+
      
     }
 }

@@ -29,7 +29,17 @@ public class client {
 
 		ts = new TTPSegmentService(clientPort,10);		
 		ts.createConnection(clientPort, serverPort,"127.0.0.1","127.0.0.1");
-		//ts.closeConnection();
+
+		System.out.println("Client Connection established.");
+
+		System.out.println("\n\n");
+		
+		/*Now that connection is established,client can send filename*/
+        ts.sendFileName("a.txt");
+		
+		ts.closeConnection();
+		System.out.println("Client Connection closed.");
+
 
 	}
 	
