@@ -67,6 +67,7 @@ public class TTPSegmentService{
 	
 	public static byte[] readBuffer;
 	public static Object segmentList[];
+	private static int total_number_of_segments;
 
 	public TTPSegmentService(int port, int verbose) throws SocketException  {
 		super();
@@ -176,6 +177,7 @@ public class TTPSegmentService{
     	offset+=length;
     	
     	}
+    	total_number_of_segments = i;
     }
     
    
