@@ -28,7 +28,14 @@ public class client {
 
 		ts = new TTPSegmentService(clientPort,10);		
 		ts.createConnection(clientPort, serverPort,"127.0.0.1","127.0.0.1");
-		//ts.closeConnection();
+		System.out.println("Client Connection established.");
+
+		System.out.println("\n\n");
+
+		
+		ts.closeConnection();
+		System.out.println("Client Connection closed.");
+
 	}
 	
 	private static void printUsage() {

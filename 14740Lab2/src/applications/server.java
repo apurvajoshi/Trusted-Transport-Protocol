@@ -33,15 +33,22 @@ public class server {
 		{
 			/* Initial blocking call waiting for the first SYN packet. */
 	       	Datagram datagram = ts.getDS().receiveDatagram(); 
+	       	
+	       	/* Set the server state to LISTEN */
+	       	TTPSegmentService.serverState = TTPSegmentService.LISTEN;
+	       	
 	       	TTPSegment ackSeg=(TTPSegment)(datagram.getData());
 	       	if(ackSeg.getFlags() == TTPSegmentService.SYN)
 	       	{
 	       		/* Create a new connection */
 	       		System.out.println("Received SYN from client");
-	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1");
+	       			       		
+	       		/* Accept connection - > set the received sequence number + 1 as the acknowledgment number*/
+	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1", ackSeg.getSeqNumber()+1);
+	    		System.out.println("Server Connection established.\n\n");
+
 	       	}
 		}
-
 	}
 
 	private static void printUsage() {

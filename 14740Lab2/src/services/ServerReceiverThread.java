@@ -15,18 +15,6 @@ public class ServerReceiverThread extends Thread {
 		this.ds = ds;
 		this.senderThread = senderThread;
 	}
-	public void destroyConnection(TTPSegment ackSeg)  throws IOException, ClassNotFoundException
-    {
-		/* Check if there is data to be sent */
-
-		/* If yes then send data with ACK flag */
-		
-		/* If no then respond with FIN ACK MSG*/
-		senderThread.createSegment(ackSeg.getSeqNumber(),TTPSegmentService.ACK_FIN,"");
-	    wait_for_final_ack = 1;
-	    senderThread.sendWithoutTimeout();
-    }
-
 
     public void run() {    	
     	while(true)
@@ -34,25 +22,54 @@ public class ServerReceiverThread extends Thread {
     		Datagram datagram;
     		try {
 				datagram = ds.receiveDatagram();
-				senderThread.timer.cancel();
+				senderThread.timeoutTask.cancel();
 				System.out.println("Server Received " + datagram.getData());
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
 
 	       		switch(ackSeg.getFlags()) {
 	    		case TTPSegmentService.ACK:
-	    			  System.out.println("Server received ACK");
+	    			  System.out.println("Server received ACK");	
+	    			  
+	    			  /* Set the server state to ESTABLISHED */
+	    			  if(TTPSegmentService.serverState == TTPSegmentService.SYN_RECEIVED)
+	    				  TTPSegmentService.serverState = TTPSegmentService.ESTABLISHED;
+	    			  else if (TTPSegmentService.serverState == TTPSegmentService.LAST_ACK && 
+	    					  ackSeg.getData().toString().equals("FIN"))
+	    			  {
+			    			System.out.println("Server closed.");
+		    			  TTPSegmentService.serverState = TTPSegmentService.CLOSED;
+	    			  }
 	    			  break;
 	    			  
 	    		case TTPSegmentService.FIN:
 	    			  System.out.println("Server received FIN");
-	    			  destroyConnection(ackSeg);
+	    			  senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1,TTPSegmentService.ACK, ackSeg.getData());
+	    			  senderThread.send();
+
+	    			  TTPSegmentService.serverState = TTPSegmentService.CLOSE_WAIT;
+	    			  
+	    			  /* 
+	    			   * 
+	    			   * Send data if anything is remaining.
+	    			   * 
+	    			   * 
+	    			   */
+
+	    			  
+	    			  senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.FIN,"FIN");
+	    			  senderThread.send();
+	    			  TTPSegmentService.serverState = TTPSegmentService.LAST_ACK;
 	    			  break;
 	    			  
 	    		}
 	       		
 	       		/* Close connection */
-	       		if(wait_for_final_ack == 1)
-	       			 break;
+	       		if(TTPSegmentService.serverState == TTPSegmentService.CLOSED)
+	       		{
+	       			senderThread.timer.cancel();
+		    		System.out.println("Server closed connection");
+	       			break;
+	       		}
 
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
