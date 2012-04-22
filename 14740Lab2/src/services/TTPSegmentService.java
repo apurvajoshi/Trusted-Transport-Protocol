@@ -12,7 +12,6 @@ package services;
 import java.io.IOException;
 import java.net.SocketException;
 import datatypes.Datagram;
-import datatypes.TTPSegment;
 
 public class TTPSegmentService{
 	/* Definition of all constant variables */
@@ -55,28 +54,18 @@ public class TTPSegmentService{
 	}
     
     /*This function is used by the server to accept the connection with the server*/
-    public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr) throws IOException, ClassNotFoundException
+    public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr)
 	{
-    
-    	/*Modified Code*/
-    	/*Initial blocking call waiting for the first SYN packet.Should we do check here for SYN?*/
-    	Datagram datagram = ds.receiveDatagram(); 
-    	/*Once received initialize a new sender and receiver thread*/
-    	TTPSegment ackSeg=(TTPSegment)(datagram.getData());
-    	if(ackSeg.getFlags() == TTPSegmentService.SYN)
-    	{
-    	/*Currently put dummy source port*/
-    	serverSenderThread = new SenderThread(this.ds, (short)9000, dstPort, srcAddr, dstAddr);
+      	/* Initialize a new sender and receiver thread*/
+    	serverSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
 		serverSenderThread.createSegment(0, SYN_ACK, "");
 		serverSenderThread.send();
     	serverReceiverThread = new ServerReceiverThread(this.ds, serverSenderThread);
-		serverReceiverThread.start();
-    	}
-    	return;
-    	/*End of modified code */
+		serverReceiverThread.start();    	
 	}
 		
-    public void initiateDestroy() throws IOException, ClassNotFoundException
+    public void closeConnection()
+
     {
 		/* Sending datagram */
 		clientSenderThread.createSegment(0, FIN, "");
@@ -85,21 +74,17 @@ public class TTPSegmentService{
     }   
     
     
-    public void clientSendFileRequest()
-    {
-    	/*Inserted dummy values*/
-        final String filename = "a.txt";
-    	clientSenderThread.createSegment(3, ACK ,filename);
-    	clientSenderThread.send();
-    }
-    public int serverCheckFilePresent(String filename)
+  
+  /*  public int serverCheckFilePresent(String filename)
     {
     /*Check in a list whether the file is present and if yes then 
      * send the file.	 
      */
-    	return 1;
     	
-    }
+    	//return 1;
+    	
+   // }*/
+
     
     
 }

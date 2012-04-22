@@ -4,17 +4,21 @@
 package applications;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-
+import datatypes.Datagram;
+import datatypes.TTPSegment;
 import services.TTPSegmentService;
 import java.util.List;
 
 public class server {
 
 	public static TTPSegmentService ts;
-    public static ServerSocket serverSocket = null;   
-    private static int serverPort   = 6000;
+
+    private static final short serverListenPort = 6000;
+    private static final short serverRespondPort = 6000;
+	public static final short clientPort = 6001;
+	public String[] filenames = {"a.txt","b.txt","c.txt"};
+
+
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 
 		/*if(args.length != 1) {
@@ -24,15 +28,24 @@ public class server {
 		int port = Integer.parseInt(args[0]);*/
 
 		System.out.println("Starting Server ...");
-		ts = new TTPSegmentService(serverPort, 10);
+		ts = new TTPSegmentService(serverListenPort, 10);
 		run();
 	}
 
 	private static void run() throws IOException, ClassNotFoundException {		
-		while(true) {
-            // Span a new thread to service the request
-		
-           ts.acceptConnection((short)6001, (short)6000,"127.0.0.1","127.0.0.1");
+
+		if(true) 
+		{
+			/* Initial blocking call waiting for the first SYN packet. */
+	       	Datagram datagram = ts.getDS().receiveDatagram(); 
+	       	TTPSegment ackSeg=(TTPSegment)(datagram.getData());
+	       	if(ackSeg.getFlags() == TTPSegmentService.SYN)
+	       	{
+	       		/* Create a new connection */
+	       		System.out.println("Received SYN from client");
+	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1");
+	       	}
+
 		}
 
 	}
