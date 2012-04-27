@@ -12,6 +12,7 @@ public class client {
 	private static TTPSegmentService ts;
 	private static final short serverPort = 6000;
 	public static final short clientPort = 6001;
+	public static int fileSize =0;
 	
 	/**
 	 * @param args
@@ -35,10 +36,19 @@ public class client {
 		System.out.println("\n\n");
 		
 		/*Now that connection is established,client can send filename*/
-        ts.sendFileName("a.txt");
 		
+		//SEND
+        fileSize=ts.sendFileName("/Users/gautamdambekodi/Desktop/Trusted-Transport-Protocol/14740Lab2/src/a.txt");
+	//	System.out.println("Client has sent filename\n");
+        
+        
+     while(TTPSegmentService.clientState != TTPSegmentService.DATA_OVER)
+     {
+    	 ;
+     }
+
 		ts.closeConnection();
-		System.out.println("Client Connection closed.");
+	//	System.out.println("Client Connection closed.");
 
 
 	}

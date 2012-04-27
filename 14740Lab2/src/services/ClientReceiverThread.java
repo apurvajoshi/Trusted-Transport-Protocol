@@ -1,6 +1,9 @@
 package services;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
 
 import datatypes.Datagram;
 import datatypes.TTPSegment;
@@ -30,7 +33,7 @@ public class ClientReceiverThread extends Thread {
 				senderThread.timeoutTask.cancel();
 				System.out.println("Received " + datagram.getData());
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
-	       		
+	       		System.out.println("\n Data is" + ackSeg.getData());
 	       		switch(ackSeg.getFlags()) {
 	       		
 	    		case TTPSegmentService.SYN_ACK: 
@@ -49,16 +52,7 @@ public class ClientReceiverThread extends Thread {
 	    		case TTPSegmentService.ACK:
 	    			System.out.println("Client received  ACK.");
 	    			
-	    			/*Check if this is the first packet to be sent after connection is established*/
-	    		    /* if(TTPSegmentService.clientState == TTPSegmentService.ESTABLISHED && first_time == 0)
-	    		     {
-	    			first_time = 1;
-	    			
-	    			filename = "a.txt";
-	    			System.out.println("\nMust send filename\n");
-	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, filename);
-	    		    senderThread.send();
-	    		     }*/
+	    		
 	    			
 	    			/* Make sure if received ACK  is for FIN */
 	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1 && 
@@ -125,6 +119,25 @@ public class ClientReceiverThread extends Thread {
 						System.out.println("Issues in waiting.");
 						e.printStackTrace();
 					}
+	    			break;
+	    		case TTPSegmentService.DATA:
+	    			System.out.println("Client recieved data\n");
+	    			
+	    			
+	    			
+	    			ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+	    			ObjectOutputStream oStream = new ObjectOutputStream( bStream );
+	    			oStream.writeObject (ackSeg.getData());
+	    			byte[] byteVal = bStream. toByteArray();
+	    			
+	    			
+	    			System.out.println(Arrays.toString(byteVal));
+	    		
+	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			senderThread.send();
+	    			/*Should put into reciever buffer*/
+	    			
+	    			
 	    			break;
 	    		}
 	       		

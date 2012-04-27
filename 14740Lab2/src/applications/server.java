@@ -55,14 +55,12 @@ public class server {
 	    		System.out.println("Server Connection established.\n\n");
 
 	       	}
+	       	System.out.println("\n HERE in server\n");
 	       	
 	       	/*Connection established.Now recieve filename and read it into a byte array*/
-	       	File file = new File("a.txt");
-	      
-	       	ts.sendFile(file);
-	       	
-	       	  
-	       	
+	       	//File file = new File("../a.txt");
+	       	//ts.sendFile(file);
+	       		       	
 		}
 	}
 

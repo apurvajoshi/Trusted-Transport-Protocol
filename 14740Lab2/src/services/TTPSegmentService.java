@@ -30,6 +30,9 @@ public class TTPSegmentService{
 	public static final byte ACK_FIN = 17;
 	public static final long MSL = 2; //20;
     public static final long TIMEOUT = 2 * MSL;
+	public static final byte FIRST = 11;
+	public static final byte DATA = 12;
+    
     
     
     /* State definitions */
@@ -44,6 +47,8 @@ public class TTPSegmentService{
 	public static final int TIME_WAIT  = 8;
 	public static final int CLOSE_WAIT  = 9;
 	public static final int LAST_ACK  = 10;
+	public static final int DATA_OVER  = 11;
+	
 	
 	
 	/* Starting sequence numbers */
@@ -65,10 +70,7 @@ public class TTPSegmentService{
 	private ClientReceiverThread clientReceiverThread;
 	
 	
-	public static byte[] readBuffer;
-	public static Object segmentList[];
-	private static int total_number_of_segments;
-
+	
 	public TTPSegmentService(int port, int verbose) throws SocketException  {
 		super();
 		ds = new DatagramService(port, verbose);
@@ -132,12 +134,9 @@ public class TTPSegmentService{
 		/* Sending datagram */
 		clientSenderThread.createSegment(CLIENT_STARTING_SEQ_NO, 0, FIN, "FIN");
 		clientSenderThread.send();
-    	
-
-
+    
 		clientState = FIN_WAIT_1;
-		
-
+	
 		while(clientState != CLOSED)
 		{
 			/* Wait until the client state changes to CLOSED */
@@ -148,51 +147,20 @@ public class TTPSegmentService{
 
     
     
-    public void sendFileName(String fileName)
+    public int sendFileName(String fileName)
     {
-    	clientSenderThread.createSegment(1001, 1, TTPSegmentService.ACK, fileName);
+    	int size=0;
+    	/*Must change the sequence number being sent*/
+    	clientSenderThread.createSegment(1001, 1, FIRST, fileName);
 	    clientSenderThread.send();
-    }
+	    
+	    return size;
+   }
+
+
+ 
     
-    /*Reads file dat into byte array and then partitions them*/
-    public void sendFile(File file) throws FileNotFoundException, IOException 
-    {
-     	readBuffer= fileToByteArray(file);
-     	createPacketList();
-    	
-    }
     
-    /*Creates a list of data Objects.These can be sent to the function create segment*/
-    public void createPacketList()
-    {
-    	int length=readBuffer.length;
-    	byte[] segment = new byte[SEGMENT_SIZE];
-    	int offset=0;
-    	int i=0;
-    	while(offset < length)
-    	{
-    	segment=Arrays.copyOfRange(readBuffer, offset, (offset+ SEGMENT_SIZE));
-    	segmentList[i]= segment;
-    	i++;
-    	offset+=length;
-    	
-    	}
-    	total_number_of_segments = i;
-    }
-    
-   
-    public byte[] fileToByteArray(File file) throws FileNotFoundException, IOException{  
-        int length = (int) file.length();  
-        byte[] array = new byte[length];  
-        InputStream in = new FileInputStream(file);  
-        int offset = 0;  
-        while (offset < length) {  
-            int count = in.read(array, offset, (length - offset));  
-            offset += length;  
-        }  
-        in.close();  
-        return array;  
-        }  
     
     
 }

@@ -1,6 +1,7 @@
 package services;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -16,6 +17,8 @@ public class ServerReceiverThread extends Thread {
 	public int final_ack_recieved=0;
 	public int server_first_time=0;
 	public static String fileName ;
+	public static final int SEGMENT_SIZE = 512;
+	File file ;
     
 	public ServerReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
@@ -28,10 +31,12 @@ public class ServerReceiverThread extends Thread {
     	{
     		Datagram datagram;
     		try {
+    			System.out.println("Server state is"+ TTPSegmentService.serverState);
 				datagram = ds.receiveDatagram();
 				senderThread.timeoutTask.cancel();
 				System.out.println("Server Received " + datagram.getData());
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
+	       		System.out.println("Data is "+ ackSeg.getData().toString());
 
 	       		switch(ackSeg.getFlags()) {
 	    		case TTPSegmentService.ACK:
@@ -49,7 +54,26 @@ public class ServerReceiverThread extends Thread {
 			    			System.out.println("Server closed.");
 		    			  TTPSegmentService.serverState = TTPSegmentService.CLOSED;
 	    			  }
-
+	    			  else if(  TTPSegmentService.serverState == TTPSegmentService.ESTABLISHED)
+	    			  {
+	    				  byte[] segment = new byte[SEGMENT_SIZE];
+	    				  segment =senderThread.getNextSegment();
+	    				  if(segment!=null)
+	    				  {
+	    					  System.out.println("Just before sending "+ segment);
+	    				   senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.DATA,segment);
+	   	    		    senderThread.send();
+	    				  }
+	    				  else
+	    				  {
+	    					   System.out.println("\n Data over");
+	    					   //Must change
+	    					   TTPSegmentService.clientState=TTPSegmentService.DATA_OVER;
+	    				  }
+	    			  }
+	    			
+	    			  
+	    			  
 	    			  break;
 	    			  
 	    		case TTPSegmentService.FIN:
@@ -71,6 +95,19 @@ public class ServerReceiverThread extends Thread {
 	    			  senderThread.send();
 	    			  TTPSegmentService.serverState = TTPSegmentService.LAST_ACK;
 	    			  break;
+	    			  
+	    		case TTPSegmentService.FIRST:
+	    			System.out.println("\n Filename recieved is "+ datagram.getData().toString());
+	    		    file = new File(ackSeg.getData().toString());
+	    		    senderThread.readAndCreateSegments(file);
+	    		    System.out.println("\n Back\n");
+	    		    byte[] segment_send= new byte[SEGMENT_SIZE];
+  				    segment_send =senderThread.getNextSegment();
+  				    System.out.println("Just before sending "+ segment_send);
+	    		    senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.DATA,segment_send);
+	    		    
+	    		    senderThread.send();
+	    			break;
 	    			  
 	    		}
 	       		
