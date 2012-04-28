@@ -4,7 +4,11 @@
 
 package applications;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 import services.TTPSegmentService;
 
 public class client {
@@ -26,6 +30,7 @@ public class client {
 		int port = Integer.parseInt(args[0]);*/ 
 		
 		System.out.println("Starting client ...");
+		int i=0;
 
 
 		ts = new TTPSegmentService(clientPort,10);		
@@ -39,13 +44,29 @@ public class client {
 		
 		//SEND
         fileSize=ts.sendFileName("/Users/gautamdambekodi/Desktop/Trusted-Transport-Protocol/14740Lab2/src/a.txt");
-	//	System.out.println("Client has sent filename\n");
+		System.out.println("Client has sent filename\n");
         
-        
-     while(TTPSegmentService.clientState != TTPSegmentService.DATA_OVER)
-     {
-    	 ;
-     }
+        byte[] segment;
+        while(TTPSegmentService.clientState != TTPSegmentService.DATA_OVER)
+        {
+        	 ;
+        }
+        System.out.println("BACK ");
+		while((segment=ts.recievePackets())!=null)
+        {
+        	File file =new File("/Users/gautamdambekodi/Desktop/Trusted-Transport-Protocol/14740Lab2/src/c.txt");
+			if(!file.exists()){
+    			file.createNewFile();
+    		}
+			
+			
+			FileOutputStream fos = new FileOutputStream(file,true);
+		    ObjectOutputStream oos = new ObjectOutputStream(fos);
+		//     oos.flush();
+		   //  oos.writeObject(datagram.getData());
+	     	 fos.write(segment);
+        }
+
 
 		ts.closeConnection();
 	//	System.out.println("Client Connection closed.");

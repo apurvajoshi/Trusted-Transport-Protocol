@@ -1,143 +1,228 @@
 package services;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 
-public class ServerReceiverThread extends Thread {
+public class ClientReceiverThread extends Thread {
 
-
+	
+	
 	public DatagramService ds;
 	public SenderThread senderThread;
-	public int wait_for_final_ack = 0;
-	public int final_ack_recieved=0;
-	public int server_first_time=0;
-	public static String fileName ;
+	/*Used to check whether this is the first time*/
+	private int first_time =0;
+	private String filename ;
 	public static final int SEGMENT_SIZE = 492;
-	File file ;
-    
-	public ServerReceiverThread(DatagramService ds, SenderThread senderThread)
+	public static List<byte[]> segmentList;
+	public static int SegmentNumber=0;
+ public static int total_number_of_segments=0;
+	
+	public ClientReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
 		this.ds = ds;
 		this.senderThread = senderThread;
+		segmentList = new ArrayList<byte[]>();
 	}
-
-    public void run() {    	
+    public byte[] getNextSegment()
+    {
+    	byte[] segment = new byte[SEGMENT_SIZE];
+    	if(SegmentNumber > total_number_of_segments)
+    	{
+    		 return null;
+    	}
+    	segment=segmentList.get(SegmentNumber);
+    	SegmentNumber++;
+    	return segment;
     	
-		while(true)
+   	 
+    }
+	
+	
+    public void run() {    	
+    	while(true)
     	{
     		Datagram datagram;
     		try {
-    			System.out.println("Server state is"+ TTPSegmentService.serverState);
 				datagram = ds.receiveDatagram();
 				senderThread.timeoutTask.cancel();
-				System.out.println("Server Received " + datagram.getData());
+				System.out.println("Received " + datagram.getData());
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
-	       		System.out.println("Data is "+ ackSeg.getData().toString());
-
+	       		System.out.println("\n Data is" + ackSeg.getData());
 	       		switch(ackSeg.getFlags()) {
-	    		case TTPSegmentService.ACK:
+	       		
+	    		case TTPSegmentService.SYN_ACK: 
+	    			System.out.println("Client received  SYN_ACK.");
+	    			
+	    			/* Send the next acknowledgment */
+	//senderThread.setDstPort(ackSeg.getSrcport());
+	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			senderThread.send();
+	    			
+	    			/* Set client state to established */
+	    			TTPSegmentService.clientState = TTPSegmentService.ESTABLISHED;
 
-	    			  System.out.println("Server received ACK");	
-	    			  
-	   
-	    			  
-	    			  /* Set the server state to ESTABLISHED */
-	    			  if(TTPSegmentService.serverState == TTPSegmentService.SYN_RECEIVED)
-	    				  TTPSegmentService.serverState = TTPSegmentService.ESTABLISHED;
-	    			  else if (TTPSegmentService.serverState == TTPSegmentService.LAST_ACK && 
-	    					  ackSeg.getData().toString().equals("FIN"))
-	    			  {
-			    			System.out.println("Server closed.");
-		    			  TTPSegmentService.serverState = TTPSegmentService.CLOSED;
-	    			  }
-	    			else if(  TTPSegmentService.serverState == TTPSegmentService.ESTABLISHED)
-	    			  {
-	    				  byte[] segment = new byte[SEGMENT_SIZE];
-	    				  segment =senderThread.getNextSegment();
-	    				  if(segment!=null)
-	    				  {
-	    					  System.out.println("Just before sending "+ segment);
-	    				   senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.DATA,segment);
-	   	    		    senderThread.send();
-	    				  }
-	    				  else
-	    				  {
-	    					   System.out.println("\n Data over");
-	    					   //Must change
-	    					   TTPSegmentService.clientState=TTPSegmentService.DATA_OVER;
-	    				  }
-	    			  }
-	  
-	    			  break;
-	    			  
-	    		case TTPSegmentService.FIN:
-	    			  System.out.println("Server received FIN");
-	    			  senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1,TTPSegmentService.ACK, ackSeg.getData());
-	    			  senderThread.send();
-
-	    			  TTPSegmentService.serverState = TTPSegmentService.CLOSE_WAIT;
-	    			  
-	    			  /* 
-	    			   * 
-	    			   * Send data if anything is remaining.
-	    			   * 
-	    			   * 
-	    			   */
-
-	    			  
-	    			  senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.FIN,"FIN");
-	    			  senderThread.send();
-	    			  TTPSegmentService.serverState = TTPSegmentService.LAST_ACK;
-	    			  break;
-	    			  
-	    		case TTPSegmentService.FIRST:
-	    			System.out.println("\n Filename recieved is "+ datagram.getData().toString());
-	    		    file = new File(ackSeg.getData().toString());
-	    		    
-	    		    
-	    		    
-	    		    
-	    		    senderThread.readAndCreateSegments(file);
-	    		    System.out.println("\n Back\n");
-	    		    byte[] segment_send= new byte[SEGMENT_SIZE];
-  				    segment_send =senderThread.getNextSegment();
-	    		    senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.DATA,segment_send);
-	    		    
-	    		    senderThread.send();
 	    			break;
-	    			  
+	    			
+	    		case TTPSegmentService.ACK:
+	    			System.out.println("Client received  ACK.");
+	    	
+	    			/* Make sure if received ACK  is for FIN */
+	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1 && 
+	    					ackSeg.getData().toString().equals("FIN"))
+	    			{
+		    			System.out.println("Client FIN_WAIT_2.");
+	    				TTPSegmentService.clientState = TTPSegmentService.FIN_WAIT_2;
+
+	    			}
+	    			else if (TTPSegmentService.clientState == TTPSegmentService.CLOSING &&
+	    					ackSeg.getData().toString().equals("FIN"))
+	    			{
+	    				TTPSegmentService.clientState = TTPSegmentService.TIME_WAIT;
+	    				try {
+							sleep(TTPSegmentService.TIMEOUT * 1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							System.out.println("Issues in waiting.");
+							e.printStackTrace();
+						}
+	    			}
+	    			
+	    			/* Do nothing */
+	    			break;
+	    			
+	    		case TTPSegmentService.FIN:
+	    			System.out.println("Client received FIN.");
+
+
+	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1)
+	    			{
+	    				senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, ackSeg.getData());
+		    			senderThread.send();
+	    				TTPSegmentService.clientState = TTPSegmentService.CLOSING;
+	    			}
+	    			else if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_2)
+	    			{
+	    				senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, ackSeg.getData()); 
+		    			senderThread.send();
+	    				TTPSegmentService.clientState = TTPSegmentService.TIME_WAIT;
+		    			System.out.println("Client TIME_WAIT.");
+	    				try {
+							sleep(TTPSegmentService.TIMEOUT * 1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							System.out.println("Issues in waiting.");
+							e.printStackTrace();
+						}
+	    				
+	    			}
+	    			
+	    			break;
+	    		case TTPSegmentService.ACK_FIN:
+	    			System.out.println("Client received ACK_FIN.");
+	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			senderThread.send();
+	    			
+	    			/* Set the state to TIME WAIT */
+	    			TTPSegmentService.clientState = TTPSegmentService.TIME_WAIT;
+	    			try {
+						sleep(TTPSegmentService.TIMEOUT * 1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						System.out.println("Issues in waiting.");
+						e.printStackTrace();
+					}
+	    			break;
+	    			
+	    		case TTPSegmentService. All_DATA_SENT :
+	    			System.out.println("data over");
+	    			   TTPSegmentService.clientState = TTPSegmentService.DATA_OVER;
+	    		  
+	    			 break;
+	    		case TTPSegmentService.DATA:
+	    			
+	    			
+	    			 total_number_of_segments++;
+	    			System.out.println("Client recieved data\n");
+	    			
+	    			
+	    			System.out.println("\n Data is Before" + ackSeg.getData());
+	      
+	    		       System.out.println("\n Data is AFTER" + ackSeg.getData());
+	    		       
+	    		       
+	    		       ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+	    		       ObjectOutputStream oStream = new ObjectOutputStream( bStream );
+	    		       oStream.writeObject ( ackSeg.getData() );
+	    		       oStream.flush();
+	    		       byte[] byteVal = bStream. toByteArray();
+	    		   	   System.out.println(Arrays.toString(byteVal) + byteVal.length);
+	    		   	   
+	    		   	   /*Extra code*/
+	    		   	   
+	    		   	byte[] segment = new byte[SEGMENT_SIZE];
+	    		   	segment=Arrays.copyOfRange(byteVal, 27, (SEGMENT_SIZE + 27));
+	    		    System.out.println("After removing 27 bytes"+ Arrays.toString(segment));
+	    		    
+	    		    
+
+	    			File file =new File("/Users/gautamdambekodi/Desktop/Trusted-Transport-Protocol/14740Lab2/src/b.txt");
+	    			if(!file.exists()){
+	        			file.createNewFile();
+	        		}
+	    			
+	    			
+	    			 FileOutputStream fos = new FileOutputStream(file,true);
+	    		     ObjectOutputStream oos = new ObjectOutputStream(fos);
+	    		   //  oos.writeObject(datagram.getData());
+	    	     	 fos.write(segment);
+	    		   	   /*End of extra code*/
+	    		   	   
+	    			segmentList.add(segment);
+	    		   	   
+	    		   	   
+	    			   senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			   senderThread.send();
+	    			   /*Should put into reciever buffer*/
+	    			break;
+	    			
+	    			
+	    			
+	    		case TTPSegmentService.SIZE:
+	    			   System.out.println("Size is "+ Integer.parseInt(ackSeg.getData().toString()));
+	    			   
+	    			   senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			   senderThread.send();
+	    			   break;
 	    		}
 	       		
-
-	       		/* Close connection */
-	       		if(TTPSegmentService.serverState == TTPSegmentService.CLOSED)
+	       		if(TTPSegmentService.clientState == TTPSegmentService.TIME_WAIT)
 	       		{
-	       			senderThread.timer.cancel();
-		    		System.out.println("Server closed connection");
-	       			break;
+	       			/* Set the state to Closed */
+	    			TTPSegmentService.clientState = TTPSegmentService.CLOSED;
+	    			System.out.println("Client Closed.");
+	    			break;
 	       		}
-
+	       		
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				System.out.println("IOException in server receiving data");
+				System.out.println("IOException in receiving data");
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
-				System.out.println("ClassNotFoundException in server receiver thread");
+				System.out.println("ClassNotFoundException in receiver thread");
 				e.printStackTrace();
 			}
     	}
     }
-
-	
 }

@@ -32,8 +32,10 @@ public class TTPSegmentService{
     public static final long TIMEOUT = 2 * MSL;
 	public static final byte FIRST = 11;
 	public static final byte DATA = 12;
+	public static final byte All_DATA_SENT = 13;
+	public static final byte SIZE = 14;
     
-    
+
     
     /* State definitions */
 	public static final int CLOSED  = 0;
@@ -107,6 +109,15 @@ public class TTPSegmentService{
 		
 	}
     
+    
+    public byte[] recievePackets()
+    {
+ 
+    	         byte [] segment = new byte[SEGMENT_SIZE];
+    	         segment = clientReceiverThread.getNextSegment();
+    	     	 return (segment);
+    }
+    
     /*This function is used by the server to accept the connection with the server*/
     public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr, int ackNo)
 	{
@@ -153,14 +164,11 @@ public class TTPSegmentService{
     	/*Must change the sequence number being sent*/
     	clientSenderThread.createSegment(1001, 1, FIRST, fileName);
 	    clientSenderThread.send();
-	    
+	    while(clientState != DATA_OVER)
+	    {
+	    	;
+	    }
 	    return size;
    }
 
-
- 
-    
-    
-    
-    
 }

@@ -68,7 +68,7 @@ public class SenderThread {
 		return datagram;
 	}
     /*Reads file data into byte array and then partitions them*/
-    public  void readAndCreateSegments(File file) throws FileNotFoundException, IOException 
+    public int readAndCreateSegments(File file) throws FileNotFoundException, IOException 
     {
      	FileInputStream fis = new FileInputStream(file);
      	BufferedInputStream bir = new BufferedInputStream(fis);
@@ -78,7 +78,8 @@ public class SenderThread {
 		System.out.println(Arrays.toString(fileContents));
      	//System.out.println(fileContents);
      	createPacketList(fileContents);
-    	return;
+     	int length = fileContents.length;
+    	return length;
     }
     
     /*Creates a list of data Objects.These can be sent to the function create segment*/
@@ -134,6 +135,7 @@ public class SenderThread {
 
     public void send() {
     	try {
+    	
 			ds.sendDatagram(createDatagram(this.seg));
 		
 			this.timeoutTask = new TimeoutTask(createDatagram(this.seg));

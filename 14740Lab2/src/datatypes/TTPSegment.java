@@ -30,7 +30,7 @@ public class TTPSegment implements Serializable {
 	
 	// Actual data
 	Object data;
-
+      //byte data[];
 	
 	public TTPSegment() {
 		super();

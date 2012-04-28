@@ -7,7 +7,9 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import datatypes.Datagram;
 import datatypes.TTPSegment;
@@ -21,12 +23,34 @@ public class ClientReceiverThread extends Thread {
 	/*Used to check whether this is the first time*/
 	private int first_time =0;
 	private String filename ;
+	public static final int SEGMENT_SIZE = 492;
+	
+	public static List<byte[]> segmentList;
+	public static int SegmentNumber=0;
+ public static int total_number_of_segments=0;
+ public static int Segments_expected =0;
 	
 	public ClientReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
 		this.ds = ds;
 		this.senderThread = senderThread;
+		segmentList = new ArrayList<byte[]>();
 	}
+    public byte[] getNextSegment()
+    {
+    	byte[] segment = new byte[SEGMENT_SIZE];
+    	if(SegmentNumber >Segments_expected)
+    	{
+    		 
+    		 return null;
+    	}
+    	segment=segmentList.get(SegmentNumber);
+    	SegmentNumber++;
+    	return segment;
+    	
+   	 
+    }
+	
 	
     public void run() {    	
     	while(true)
@@ -122,34 +146,48 @@ public class ClientReceiverThread extends Thread {
 						e.printStackTrace();
 					}
 	    			break;
+	    			
+	    		case TTPSegmentService. All_DATA_SENT :
+	    			System.out.println("data over");
+	    			   //TTPSegmentService.clientState = TTPSegmentService.DATA_OVER;
+	    		  
+	    			 break;
 	    		case TTPSegmentService.DATA:
+	    			
+	    			
+	    			 total_number_of_segments++;
+	    			 if(total_number_of_segments == Segments_expected)
+	    				 
+	    			 {
+	    				 TTPSegmentService.clientState = TTPSegmentService.DATA_OVER;
+	    			 }
 	    			System.out.println("Client recieved data\n");
 	    			
 	    			
 	    			System.out.println("\n Data is Before" + ackSeg.getData());
-	    
-	    			File file =new File("/Users/gautamdambekodi/Desktop/Trusted-Transport-Protocol/14740Lab2/src/b.txt");
-	    			if(!file.exists()){
-	        			file.createNewFile();
-	        		}
-	    			
-	    			
-	    			 FileOutputStream fos = new FileOutputStream(file,true);
-	    		     ObjectOutputStream oos = new ObjectOutputStream(fos);
-	    		       oos.writeObject(ackSeg.getData());
+	      
 	    		       System.out.println("\n Data is AFTER" + ackSeg.getData());
 	    		       
-	    		       
-	    		       ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-	    		       ObjectOutputStream oStream = new ObjectOutputStream( bStream );
-	    		       oStream.writeObject ( ackSeg.getData() );
-	    		       oStream.flush();
-	    		       byte[] byteVal = bStream. toByteArray();
-	    		   	   System.out.println(Arrays.toString(byteVal));
+	    		
+	    			segmentList.add((byte[])ackSeg.getData());
+	    		   	   
+	    		   	   
 	    			   senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
 	    			   senderThread.send();
 	    			   /*Should put into reciever buffer*/
 	    			break;
+	    			
+	    			
+	    			
+	    		case TTPSegmentService.SIZE:
+	    			   System.out.println("Size is "+ Integer.parseInt(ackSeg.getData().toString()));
+	    			   int size =Integer.parseInt(ackSeg.getData().toString());
+	    			   Segments_expected =size /(SEGMENT_SIZE); 
+	    			   System.out.println("Segments expected " + Segments_expected);
+	    			   
+	    			   senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			   senderThread.send();
+	    			   break;
 	    		}
 	       		
 	       		if(TTPSegmentService.clientState == TTPSegmentService.TIME_WAIT)

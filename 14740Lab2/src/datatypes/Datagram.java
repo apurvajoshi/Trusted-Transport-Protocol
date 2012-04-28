@@ -46,6 +46,8 @@ public class Datagram implements Serializable {
 		this.size = size;
 		this.checksum = checksum;
 		this.data = data;
+		//this.data = "hello";
+		
 	}
 
 	/**
