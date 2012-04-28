@@ -1,6 +1,10 @@
 package services;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
@@ -51,9 +55,7 @@ public class ClientReceiverThread extends Thread {
 	    			
 	    		case TTPSegmentService.ACK:
 	    			System.out.println("Client received  ACK.");
-	    			
-	    		
-	    			
+	    	
 	    			/* Make sure if received ACK  is for FIN */
 	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1 && 
 	    					ackSeg.getData().toString().equals("FIN"))
@@ -124,20 +126,29 @@ public class ClientReceiverThread extends Thread {
 	    			System.out.println("Client recieved data\n");
 	    			
 	    			
-	    			
-	    			ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-	    			ObjectOutputStream oStream = new ObjectOutputStream( bStream );
-	    			oStream.writeObject (ackSeg.getData());
-	    			byte[] byteVal = bStream. toByteArray();
-	    			
-	    			
-	    			System.out.println(Arrays.toString(byteVal));
-	    		
-	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
-	    			senderThread.send();
-	    			/*Should put into reciever buffer*/
+	    			System.out.println("\n Data is Before" + ackSeg.getData());
+	    
+	    			File file =new File("/Users/gautamdambekodi/Desktop/Trusted-Transport-Protocol/14740Lab2/src/b.txt");
+	    			if(!file.exists()){
+	        			file.createNewFile();
+	        		}
 	    			
 	    			
+	    			 FileOutputStream fos = new FileOutputStream(file,true);
+	    		     ObjectOutputStream oos = new ObjectOutputStream(fos);
+	    		       oos.writeObject(ackSeg.getData());
+	    		       System.out.println("\n Data is AFTER" + ackSeg.getData());
+	    		       
+	    		       
+	    		       ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+	    		       ObjectOutputStream oStream = new ObjectOutputStream( bStream );
+	    		       oStream.writeObject ( ackSeg.getData() );
+	    		       oStream.flush();
+	    		       byte[] byteVal = bStream. toByteArray();
+	    		   	   System.out.println(Arrays.toString(byteVal));
+	    			   senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+	    			   senderThread.send();
+	    			   /*Should put into reciever buffer*/
 	    			break;
 	    		}
 	       		

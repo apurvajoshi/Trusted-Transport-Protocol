@@ -30,9 +30,9 @@ public class SenderThread {
     //public static byte[] readBuffer;
 	//public static Object segmentList[];
 	public static List<byte[]> segmentList;
-	private static int total_number_of_segments;
+	private static int total_number_of_segments=0;
 	
-	public static final int SEGMENT_SIZE = 512;
+	public static final int SEGMENT_SIZE = 492;
 	public static int SegmentNumber=0;
 
 
@@ -65,7 +65,6 @@ public class SenderThread {
 		datagram.setDstport(dstPort);
 		datagram.setSrcport(srcPort);
 		datagram.setData(seg);	
-		System.out.println("\nData at server before sending is"+ datagram.getData());
 		return datagram;
 	}
     /*Reads file data into byte array and then partitions them*/
