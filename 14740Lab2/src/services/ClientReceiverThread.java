@@ -163,7 +163,7 @@ public class ClientReceiverThread extends Thread {
 	    		case TTPSegmentService.FILESIZE:
 	    			System.out.println("Client recieved FIELSIZE " + Integer.parseInt(ackSeg.getData().toString()));
 	    			fileSize = Integer.parseInt(ackSeg.getData().toString());
-	    			segmentsExpected = (int) Math.ceil(fileSize /(SEGMENT_SIZE)); 
+	    			segmentsExpected = (int)Math.ceil((float)fileSize / (SEGMENT_SIZE)); 
 	    			System.out.println("Segments expected " + segmentsExpected);
 	    			segmentNumber = 0;
 	    			
