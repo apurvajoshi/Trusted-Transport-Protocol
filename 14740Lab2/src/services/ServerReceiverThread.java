@@ -3,7 +3,6 @@ package services;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 
@@ -15,7 +14,7 @@ public class ServerReceiverThread extends Thread {
 	public WindowTimer windowTimer;
 	public static String fileName ;
 	public int clientExpectedSeqNo;
-	public static final int SEGMENT_SIZE = 512;
+	public static final int SEGMENT_SIZE = 492;
 	File file ;
     
 	public ServerReceiverThread(DatagramService ds, SenderThread senderThread, WindowTimer windowTimer)
@@ -71,7 +70,8 @@ public class ServerReceiverThread extends Thread {
 	
 
     public void run() {    	
-    	while(true)
+    	
+		while(true)
     	{
     		Datagram datagram;
     		try {
@@ -129,7 +129,6 @@ public class ServerReceiverThread extends Thread {
 	    				  }
 	    				  
 	    			  }
-		    			 	    			  
 	    			  break;
 	    			  
 	    		case TTPSegmentService.FIN:
@@ -154,26 +153,7 @@ public class ServerReceiverThread extends Thread {
 	    			  break;
 	    			  
 	    		case TTPSegmentService.ACK_FILESIZE:
-	    			  //this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
-	    		      //senderThread.createSegment(clientExpectedSeqNo ,TTPSegmentService.ACK, "a");
-	    		      //senderThread.send();
 	    			  sendGoBackN(senderThread.segmentList);
-	    			  
-	    			 /*byte[] segment = new byte[SEGMENT_SIZE];
-					  segment =senderThread.getNextSegment();
-					  if(segment!=null)
-					  {
-						  System.out.println("Just before sending "+ segment);
-					   senderThread.createSegment(ackSeg.getAckNumber()+1 , ackSeg.getSeqNumber()+2 ,TTPSegmentService.DATA,segment);
-		    		    senderThread.send();
-					  }
-					  else
-					  {
-						   System.out.println("\n Data over");
-						   //Must change
-						   TTPSegmentService.clientState=TTPSegmentService.DATA_OVER;
-					  }*/
-	    				
 	    			  break;
 
 	    			  

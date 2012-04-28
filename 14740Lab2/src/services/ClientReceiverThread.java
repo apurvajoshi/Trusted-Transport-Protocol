@@ -1,5 +1,4 @@
 package services;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +68,7 @@ public class ClientReceiverThread extends Thread {
 	    			System.out.println("Client received  ACK.");
 	    			
 		    		/* Make sure if received ACK  is for FIN */
+
 	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1 && 
 	    					ackSeg.getData().toString().equals("FIN"))
 	    			{
@@ -170,7 +170,6 @@ public class ClientReceiverThread extends Thread {
 	    			senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK_FILESIZE, "a");
 	    			senderThread.send();
     				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
-
 	    		}
 	       		
 	       		if(TTPSegmentService.clientState == TTPSegmentService.TIME_WAIT)

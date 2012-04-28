@@ -29,7 +29,6 @@ public class SenderThread {
     public TimeoutTask timeoutTask;
 	public List<byte[]> segmentList;
 	private static int total_number_of_segments;
-	
 	public static final int SEGMENT_SIZE = 492;
 	public static int SegmentNumber=0;
 
