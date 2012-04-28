@@ -51,12 +51,12 @@ public class server {
 	       		System.out.println("Received SYN from client");
 	       			       		
 	       		/* Accept connection - > set the received sequence number + 1 as the acknowledgment number*/
-	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1", ackSeg.getSeqNumber()+1);
+	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1", TTPSegmentService.sizeOf(ackSeg.getData()));
 	    		System.out.println("Server Connection established.\n\n");
+	    		
+	    		//ts.sendGoBackN();
 
-	       	}
-	       	System.out.println("\n HERE in server\n");
-	       	
+	       	}	       	
 	       	/*Connection established.Now recieve filename and read it into a byte array*/
 	       	//File file = new File("../a.txt");
 	       	//ts.sendFile(file);

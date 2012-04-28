@@ -4,7 +4,11 @@
 
 package applications;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 import services.TTPSegmentService;
 
 public class client {
@@ -13,6 +17,7 @@ public class client {
 	private static final short serverPort = 6000;
 	public static final short clientPort = 6001;
 	public static int fileSize =0;
+	public static String filename = "a.txt";
 	
 	/**
 	 * @param args
@@ -32,23 +37,35 @@ public class client {
 		ts.createConnection(clientPort, serverPort,"127.0.0.1","127.0.0.1");
 
 		System.out.println("Client Connection established.");
-
 		System.out.println("\n\n");
 		
-		/*Now that connection is established,client can send filename*/
+		/* Send data go back n */
 		
-		//SEND
-        fileSize=ts.sendFileName("/Users/gautamdambekodi/Desktop/Trusted-Transport-Protocol/14740Lab2/src/a.txt");
-	//	System.out.println("Client has sent filename\n");
+		/* Now that connection is established, client can send filename */
+        fileSize = ts.sendFileName(filename);
+        System.out.println("Client has sent filename\n");
         
         
-     while(TTPSegmentService.clientState != TTPSegmentService.DATA_OVER)
-     {
-    	 ;
-     }
-
-		ts.closeConnection();
-	//	System.out.println("Client Connection closed.");
+        while(TTPSegmentService.clientState != TTPSegmentService.DATA_OVER)
+        {
+        	 ;
+        }
+        System.out.println("BACK ");
+        byte[] segment; 
+		while((segment=ts.recievePackets())!=null)
+        {
+        	File file =new File("src/received.txt");
+			if(!file.exists()){
+    			file.createNewFile();
+    		}
+			
+			FileOutputStream fos = new FileOutputStream(file,true);
+		    ObjectOutputStream oos = new ObjectOutputStream(fos);
+	     	fos.write(segment);
+        }
+		
+		//ts.closeConnection();
+		//System.out.println("Client Connection closed.");
 
 
 	}
