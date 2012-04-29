@@ -38,7 +38,7 @@ public class WindowTimer {
 			for(int i = 0; i < TTPSegmentService.window.size(); i++)
 			{
 				TTPSegment s = TTPSegmentService.window.get(i);
-				System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
+				System.out.println("Window -> Sending data starting with seq no : " + s.getSeqNumber());
 				this.senderThread.createDatagram(s);
 				this.senderThread.sendWithoutTimeout();
 			}

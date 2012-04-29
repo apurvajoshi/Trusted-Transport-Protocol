@@ -64,8 +64,8 @@ public class client {
 	     	fos.write(segment);
         }
 		
-		//ts.closeConnection();
-		//System.out.println("Client Connection closed.");
+		ts.closeConnection();
+		System.out.println("Client Connection closed.");
 
 
 	}

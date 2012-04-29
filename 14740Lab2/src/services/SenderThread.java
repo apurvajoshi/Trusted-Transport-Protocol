@@ -29,7 +29,7 @@ public class SenderThread {
     public TimeoutTask timeoutTask;
 	public List<byte[]> segmentList;
 	private static int total_number_of_segments;
-	public static final int SEGMENT_SIZE = 492;
+	public static final int SEGMENT_SIZE = 496;
 	public static int SegmentNumber=0;
 
 
@@ -119,13 +119,8 @@ public class SenderThread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            //timer.cancel(); //Terminate the timer thread
         }
     }
-    
-    
-
-    
     
 	 /* Reads file data into byte array and then partitions them */
 	public  int readAndCreateSegments(File file) throws FileNotFoundException, IOException 
