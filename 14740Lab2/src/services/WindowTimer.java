@@ -9,6 +9,7 @@ public class WindowTimer {
 
     public Timer timer;
     public WindowTimeoutTask timeoutTask;
+	public static final int TIMER_INTERVAL = 1; // IN MS
 
 	public WindowTimer()
 	{
@@ -18,7 +19,7 @@ public class WindowTimer {
 	public void startTimer(SenderThread s) {
 		System.out.println("Window Timer started");
     	this.timeoutTask = new WindowTimeoutTask(s);
-	    timer.schedule(timeoutTask, 5*1000, 5*1000);
+	    timer.schedule(timeoutTask, TIMER_INTERVAL*1000, TIMER_INTERVAL*1000);
     }
     
     public void stopTimer() {

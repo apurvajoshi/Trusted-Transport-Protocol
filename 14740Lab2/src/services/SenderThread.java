@@ -31,8 +31,9 @@ public class SenderThread {
     public Timer timer;
     public TimeoutTask timeoutTask;
 	public List<byte[]> segmentList;
-	private static int total_number_of_segments;
 	public static final int SEGMENT_SIZE = 496;
+	public static final int TIMER_INTERVAL = 5; // IN MS
+
 	public static int SegmentNumber=0;
 
 
@@ -133,7 +134,7 @@ public class SenderThread {
     		this.timeoutTask = new TimeoutTask(createDatagram(this.seg));
 
 			System.out.println("Timer started");
-		    timer.schedule(timeoutTask, 5*1000, 5*1000);
+		    timer.schedule(timeoutTask, TIMER_INTERVAL*1000, TIMER_INTERVAL*1000);
 			ds.sendDatagram(createDatagram(this.seg));
 		} catch (IOException e) { 
 			// TODO Auto-generated catch block
