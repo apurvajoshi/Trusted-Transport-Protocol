@@ -7,8 +7,8 @@ package applications;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.Arrays;
+
+
 
 import services.TTPSegmentService;
 
@@ -18,7 +18,7 @@ public class client {
 	private static final short serverPort = 6000;
 	public static final short clientPort = 6001;
 	public static int fileSize =0;
-	public static String filename = "a.txt";
+	public static String filename = "music.mp3";
 	
 	/**
 	 * @param args
@@ -53,24 +53,19 @@ public class client {
         {
         	 ;
         }
+        
         System.out.println("BACK ");
 
-        byte[] segment; 
-        File file =new File("src/received.txt");
-
+        byte[] segment;
+        File file =new File("src/" + filename);
 		if(!file.exists()){
 			file.createNewFile();
 		}
-		
-
 		FileOutputStream fos = new FileOutputStream(file,true);
-	   
-	    
-      
 		while((segment=ts.recievePackets())!=null)
-        {
-        	
-	     	fos.write(segment);
+		{
+		    fos.write(segment);
+
         }
 
 		ts.closeConnection();

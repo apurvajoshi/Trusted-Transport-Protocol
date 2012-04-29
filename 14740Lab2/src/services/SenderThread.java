@@ -179,9 +179,10 @@ public class SenderThread {
 	{
 	  	FileInputStream fis = new FileInputStream(file);
 	  	BufferedInputStream bir = new BufferedInputStream(fis);
-	  	byte[] fileContents = new byte[(int) file.length()];
+	  	byte[] fileContents = new byte[(int) (file.length()-1)];
 		bir.read(fileContents);
-		System.out.println(Arrays.toString(fileContents));
+		//System.out.println("File in bytes is ");
+		//System.out.println(Arrays.toString(fileContents));
 	  	createPacketList(fileContents);
 	 	return fileContents.length;
 	}
@@ -192,7 +193,6 @@ public class SenderThread {
 	 	int length = readBuffer.length;
 	 	byte[] segment = new byte[SEGMENT_SIZE];
 	 	int offset = 0;
-	 	int i = 0;
 	 	
 	 	while(offset < length)
 	 	{
@@ -201,26 +201,10 @@ public class SenderThread {
 	 		else
 	 			segment = Arrays.copyOfRange(readBuffer, offset, (offset+ length));
 	     	segmentList.add(segment);
-	     	System.out.println("Segment is " + segment);
-	     	i++;
-	     	offset += SEGMENT_SIZE;
-	 	
-	 	}
-	 	i--;
-	 	total_number_of_segments = i;	
-	 
-	}
-     
-	public byte[] getNextSegment()
-	{
-	 	byte[] segment = new byte[SEGMENT_SIZE];
-	 	if(SegmentNumber > total_number_of_segments)
-	 	{
-	 		 return null;
-	 	}
-	 	segment=segmentList.get(SegmentNumber);
-	 	SegmentNumber++;
-	 	return segment;
+	     	//System.out.println("Segment to be sent in bytes is ");
+	     	//System.out.println(Arrays.toString(segment));
+	     	offset += SEGMENT_SIZE;	 	
+	 	}	 
 	}	
     
 } 

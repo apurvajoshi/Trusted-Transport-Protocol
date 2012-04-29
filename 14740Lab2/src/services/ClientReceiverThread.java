@@ -167,6 +167,8 @@ public class ClientReceiverThread extends Thread {
 	    			
 	    		case TTPSegmentService.DATA_GO_BACK:
 	    			System.out.println("Client recieved DATA_GO_BACK. expecting : " + this.serverExpectedSeqNo);
+
+	    			System.out.println("Segmnet Number : " + segmentNumber);
 	    			ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     				ObjectOutputStream oStream = new ObjectOutputStream( bStream );
     				oStream.writeObject (ackSeg.getData());
@@ -192,7 +194,11 @@ public class ClientReceiverThread extends Thread {
 	    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
 	    		
 	    				/* Add the received data into buffer */
-		    			segmentList.add((byte[])ackSeg.getData());
+	    				byte[] fileBytes = (byte[])ackSeg.getData();
+		    			segmentList.add(fileBytes);
+		    			//System.out.println("Segment received is ");
+		    			//System.out.println(Arrays.toString(fileBytes));
+		    				
 		    			segmentNumber++;
 		    			
 		    			if(segmentNumber == segmentsExpected)
