@@ -1,14 +1,7 @@
 package services;
-
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import datatypes.Datagram;
@@ -20,37 +13,37 @@ public class ClientReceiverThread extends Thread {
 	
 	public DatagramService ds;
 	public SenderThread senderThread;
-	/*Used to check whether this is the first time*/
-	private int first_time =0;
-	private String filename ;
-	public static final int SEGMENT_SIZE = 492;
-	
-	public static List<byte[]> segmentList;
-	public static int SegmentNumber=0;
- public static int total_number_of_segments=0;
- public static int Segments_expected =0;
-	
+
+	public int serverExpectedSeqNo;
+	public int fileSize;
+	public List<byte[]> segmentList;
+	public static final int SEGMENT_SIZE = 496;
+	public int segmentsExpected =0;
+	public static int segmentNumber=0;
+
+
+
 	public ClientReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
 		this.ds = ds;
 		this.senderThread = senderThread;
 		segmentList = new ArrayList<byte[]>();
 	}
-    public byte[] getNextSegment()
-    {
-    	byte[] segment = new byte[SEGMENT_SIZE];
-    	if(SegmentNumber >Segments_expected)
-    	{
-    		 
-    		 return null;
-    	}
-    	segment=segmentList.get(SegmentNumber);
-    	SegmentNumber++;
-    	return segment;
-    	
-   	 
-    }
+
 	
+	
+	public byte[] getNextSegment()
+    {
+    	byte[] segment;
+    	if(segmentNumber > 0)
+    	{
+    		segment=segmentList.get(0);
+    		segmentList.remove(0);
+        	segmentNumber--;
+        	return segment;
+    	}
+		return null;
+    }
 	
     public void run() {    	
     	while(true)
@@ -59,28 +52,28 @@ public class ClientReceiverThread extends Thread {
     		try {
 				datagram = ds.receiveDatagram();
 				senderThread.timeoutTask.cancel();
-				System.out.println("Received " + datagram.getData());
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
-	       		System.out.println("\n Data is" + ackSeg.getData());
 	       		switch(ackSeg.getFlags()) {
 	       		
 	    		case TTPSegmentService.SYN_ACK: 
 	    			System.out.println("Client received  SYN_ACK.");
 	    			
 	    			/* Send the next acknowledgment */
-	//senderThread.setDstPort(ackSeg.getSrcport());
-	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
-	    			senderThread.send();
+	    			//senderThread.setDstPort(ackSeg.getSrcport());
+    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+    				senderThread.createSegment(this.serverExpectedSeqNo, TTPSegmentService.ACK, "a");
+    				senderThread.send();
+    			
+    				/* Set client state to established */
+    				TTPSegmentService.clientState = TTPSegmentService.ESTABLISHED;
 	    			
-	    			/* Set client state to established */
-	    			TTPSegmentService.clientState = TTPSegmentService.ESTABLISHED;
-
 	    			break;
 	    			
 	    		case TTPSegmentService.ACK:
 	    			System.out.println("Client received  ACK.");
-	    	
-	    			/* Make sure if received ACK  is for FIN */
+	    			
+		    		/* Make sure if received ACK  is for FIN */
+
 	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1 && 
 	    					ackSeg.getData().toString().equals("FIN"))
 	    			{
@@ -106,17 +99,17 @@ public class ClientReceiverThread extends Thread {
 	    			
 	    		case TTPSegmentService.FIN:
 	    			System.out.println("Client received FIN.");
-
-
 	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1)
 	    			{
-	    				senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, ackSeg.getData());
+	    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, ackSeg.getData());
 		    			senderThread.send();
 	    				TTPSegmentService.clientState = TTPSegmentService.CLOSING;
 	    			}
 	    			else if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_2)
 	    			{
-	    				senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, ackSeg.getData()); 
+	    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, ackSeg.getData()); 
 		    			senderThread.send();
 	    				TTPSegmentService.clientState = TTPSegmentService.TIME_WAIT;
 		    			System.out.println("Client TIME_WAIT.");
@@ -127,13 +120,13 @@ public class ClientReceiverThread extends Thread {
 							System.out.println("Issues in waiting.");
 							e.printStackTrace();
 						}
-	    				
 	    			}
-	    			
 	    			break;
+	    			
 	    		case TTPSegmentService.ACK_FIN:
 	    			System.out.println("Client received ACK_FIN.");
-	    			senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
+    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+	    			senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, "a");
 	    			senderThread.send();
 	    			
 	    			/* Set the state to TIME WAIT */
@@ -146,48 +139,45 @@ public class ClientReceiverThread extends Thread {
 						e.printStackTrace();
 					}
 	    			break;
+
 	    			
-	    		case TTPSegmentService. All_DATA_SENT :
-	    			System.out.println("data over");
-	    			   //TTPSegmentService.clientState = TTPSegmentService.DATA_OVER;
-	    		  
-	    			 break;
-	    		case TTPSegmentService.DATA:
-	    			
-	    			
-	    			 total_number_of_segments++;
-	    			 if(total_number_of_segments == Segments_expected)
-	    				 
-	    			 {
-	    				 TTPSegmentService.clientState = TTPSegmentService.DATA_OVER;
-	    			 }
-	    			System.out.println("Client recieved data\n");
-	    			
-	    			
-	    			System.out.println("\n Data is Before" + ackSeg.getData());
-	      
-	    		       System.out.println("\n Data is AFTER" + ackSeg.getData());
-	    		       
-	    		
-	    			segmentList.add((byte[])ackSeg.getData());
-	    		   	   
-	    		   	   
-	    			   senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
-	    			   senderThread.send();
-	    			   /*Should put into reciever buffer*/
+	    		case TTPSegmentService.DATA_GO_BACK:
+	    			System.out.println("Client recieved DATA_GO_BACK. expecting : " + this.serverExpectedSeqNo);
+	    			if(ackSeg.getSeqNumber() == this.serverExpectedSeqNo)
+	    			{
+	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, "a");
+	    				senderThread.sendWithoutTimeout();
+		    			
+		    			// ACK packet with received seq # 
+	    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+	    				
+	    				/* Add the received data into buffer */
+		    			segmentList.add((byte[])ackSeg.getData());
+		    			segmentNumber++;
+		    			
+		    			if(segmentNumber == segmentsExpected)
+			    			TTPSegmentService.clientState = TTPSegmentService.DATA_OVER;
+	    			}
+	    			else
+	    			{
+	    				// Re ACK packet with highest inorder seq # 
+	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, "a");
+		    			senderThread.sendWithoutTimeout();
+	    			}
 	    			break;
 	    			
+
+	    		case TTPSegmentService.FILESIZE:
+	    			System.out.println("Client recieved FIELSIZE " + Integer.parseInt(ackSeg.getData().toString()));
+	    			fileSize = Integer.parseInt(ackSeg.getData().toString());
+	    			segmentsExpected = (int) Math.ceil(fileSize /(SEGMENT_SIZE)); 
+	    			System.out.println("Segments expected " + segmentsExpected);
+	    			segmentNumber = 0;
 	    			
-	    			
-	    		case TTPSegmentService.SIZE:
-	    			   System.out.println("Size is "+ Integer.parseInt(ackSeg.getData().toString()));
-	    			   int size =Integer.parseInt(ackSeg.getData().toString());
-	    			   Segments_expected =size /(SEGMENT_SIZE); 
-	    			   System.out.println("Segments expected " + Segments_expected);
-	    			   
-	    			   senderThread.createSegment(ackSeg.getAckNumber(), ackSeg.getSeqNumber()+1, TTPSegmentService.ACK, "");
-	    			   senderThread.send();
-	    			   break;
+	    			senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK_FILESIZE, "a");
+	    			senderThread.send();
+    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+
 	    		}
 	       		
 	       		if(TTPSegmentService.clientState == TTPSegmentService.TIME_WAIT)

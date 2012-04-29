@@ -8,16 +8,14 @@
  */
 
 package services;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.net.SocketException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
+import datatypes.TTPSegment;
 
 public class TTPSegmentService{
 	/* Definition of all constant variables */
@@ -30,10 +28,13 @@ public class TTPSegmentService{
 	public static final byte ACK_FIN = 17;
 	public static final long MSL = 2; //20;
     public static final long TIMEOUT = 2 * MSL;
-	public static final byte FIRST = 11;
+	public static final byte FILEPATH = 11;
+	public static final byte FILESIZE = 14;
+	public static final byte ACK_FILESIZE = 30;
 	public static final byte DATA = 12;
-	public static final byte All_DATA_SENT = 13;
-	public static final byte SIZE = 14;
+
+	public static final byte DATA_GO_BACK = 13;
+
     
 
     
@@ -56,6 +57,8 @@ public class TTPSegmentService{
 	/* Starting sequence numbers */
 	public static final int CLIENT_STARTING_SEQ_NO  = 0;
 	public static final int SERVER_STARTING_SEQ_NO  = 1000;
+	public static final int MAX_WINDOW_SIZE = 15;
+	public static List<TTPSegment> window;
 
 	
 	public static volatile int serverState;
@@ -68,6 +71,7 @@ public class TTPSegmentService{
 
 	private ServerReceiverThread serverReceiverThread;
 	private SenderThread serverSenderThread;
+	private WindowTimer serverWindowTimer;
 	private SenderThread clientSenderThread;
 	private ClientReceiverThread clientReceiverThread;
 	
@@ -78,6 +82,7 @@ public class TTPSegmentService{
 		ds = new DatagramService(port, verbose);
 		TTPSegmentService.serverState = CLOSED;
 		TTPSegmentService.clientState = CLOSED;
+		window = new ArrayList<TTPSegment>();
 	}
 
 	public DatagramService getDS()
@@ -90,7 +95,8 @@ public class TTPSegmentService{
 	{			
 		/* Sending datagram */
 		clientSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
-		clientSenderThread.createSegment(CLIENT_STARTING_SEQ_NO, 0, SYN, "");
+		clientSenderThread.setSeqNo(CLIENT_STARTING_SEQ_NO);
+		clientSenderThread.createSegment(0, SYN, "a");
 		clientSenderThread.send();
 		clientState = SYN_SENT;
 		
@@ -104,29 +110,23 @@ public class TTPSegmentService{
 		}
 		
 		//clientSenderThread.timer.cancel();
-		clientSenderThread.timeoutTask.cancel();
-
-		
+		clientSenderThread.timeoutTask.cancel();		
 	}
     
     
-    public byte[] recievePackets()
-    {
- 
-    	         byte [] segment = new byte[SEGMENT_SIZE];
-    	         segment = clientReceiverThread.getNextSegment();
-    	     	 return (segment);
-    }
+
     
     /*This function is used by the server to accept the connection with the server*/
     public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr, int ackNo)
 	{
       	/* Initialize a new sender and receiver thread*/
-    	serverSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
-		serverSenderThread.createSegment(SERVER_STARTING_SEQ_NO, ackNo, SYN_ACK, "");
+    	serverWindowTimer = new WindowTimer();
+    	serverSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);    	
+    	serverSenderThread.setSeqNo(SERVER_STARTING_SEQ_NO);
+		serverSenderThread.createSegment(ackNo, SYN_ACK, "a");
 		serverSenderThread.send();
 		
-    	serverReceiverThread = new ServerReceiverThread(this.ds, serverSenderThread);
+    	serverReceiverThread = new ServerReceiverThread(this.ds, serverSenderThread, serverWindowTimer);
 		serverReceiverThread.start();    
 		
 		serverState = SYN_RECEIVED;
@@ -140,35 +140,86 @@ public class TTPSegmentService{
 	}
 		
     public void closeConnection()
-
     {
 		/* Sending datagram */
-		clientSenderThread.createSegment(CLIENT_STARTING_SEQ_NO, 0, FIN, "FIN");
+		clientSenderThread.createSegment(0, FIN, "FIN");
 		clientSenderThread.send();
-    
 		clientState = FIN_WAIT_1;
-	
 		while(clientState != CLOSED)
 		{
 			/* Wait until the client state changes to CLOSED */
 		}
-    	
 		clientSenderThread.timer.cancel();
     }    
 
     
+    public void sendGoBackN()
+    {
+    	if(window.size() < MAX_WINDOW_SIZE)
+    	{
+    	
+			/* */
+			String data = "Hello World";
+			TTPSegment s;    	
+			System.out.println("Window before? " + window.size());
+			
+			/* Add data to the window */
+			
+			/* TO DO -  DETERMINE BASED ON DATA SIZE */
+			for(int i = 0 ; window.size() < MAX_WINDOW_SIZE; i++)
+			{
+				s = serverSenderThread.createSegment(0, DATA_GO_BACK, data);
+				window.add(s);
+				System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
+				if(i == 0)
+					this.serverWindowTimer.startTimer(this.serverSenderThread);
+				serverSenderThread.sendWithoutTimeout();
+			}
+			
+			System.out.println("Window full " + window.size());
+    	}
+    	else
+    	{
+    		/* Refuse data */
+    	}
+    }
+    
+    
+    public byte[] recievePackets()
+    {
+    	return clientReceiverThread.getNextSegment();
+    }
+    
+    public static int sizeOf(Object obj)
+	{
+		try
+		{
+			ByteArrayOutputStream byteObject = new ByteArrayOutputStream();
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteObject);
+			objectOutputStream.writeObject(obj);
+			objectOutputStream.flush();
+			objectOutputStream.close();
+			byteObject.close();
+			return byteObject.toByteArray().length;
+		}
+		catch(IOException e)
+		{
+			System.out.println("SizeOf object failed " +e.getMessage());
+			return 0;
+		}
+	}
     
     public int sendFileName(String fileName)
     {
     	int size=0;
-    	/*Must change the sequence number being sent*/
-    	clientSenderThread.createSegment(1001, 1, FIRST, fileName);
+    	clientSenderThread.createSegment(1, FILEPATH, fileName);
 	    clientSenderThread.send();
 	    while(clientState != DATA_OVER)
 	    {
 	    	;
 	    }
 	    return size;
-   }
+
+   }    
 
 }
