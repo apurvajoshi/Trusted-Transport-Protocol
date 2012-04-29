@@ -12,6 +12,7 @@ public class ClientReceiverThread extends Thread {
 	public DatagramService ds;
 	public SenderThread senderThread;
 	public int serverExpectedSeqNo;
+	public int previousSeqNo;
 	public int fileSize;
 	public List<byte[]> segmentList;
 	public static final int SEGMENT_SIZE = 496;
@@ -142,7 +143,8 @@ public class ClientReceiverThread extends Thread {
 	    			{
 	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, "a");
 	    				senderThread.sendWithoutTimeout();
-		    			
+	    				this.previousSeqNo =  ackSeg.getSeqNumber();
+
 		    			// ACK packet with received seq # 
 	    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
 	    				
@@ -160,7 +162,7 @@ public class ClientReceiverThread extends Thread {
 	    			else
 	    			{
 	    				// Re ACK packet with highest inorder seq # 
-	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, "a");
+	    				senderThread.createSegment(this.previousSeqNo, TTPSegmentService.ACK, "a");
 		    			senderThread.sendWithoutTimeout();
 	    			}
 	    			break;
