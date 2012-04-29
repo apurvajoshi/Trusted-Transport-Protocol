@@ -9,8 +9,6 @@ import datatypes.Datagram;
 import datatypes.TTPSegment;
 
 public class ServerReceiverThread extends Thread {
-
-
 	public DatagramService ds;
 	public SenderThread senderThread;
 	public WindowTimer windowTimer;
@@ -30,53 +28,34 @@ public class ServerReceiverThread extends Thread {
 	
 	 public void sendGoBackN(List<byte[]> segmentList) throws NoSuchAlgorithmException  
 	    {
-		 	while(!segmentList.isEmpty())
-		 	{
-		 		if(TTPSegmentService.window.size() < TTPSegmentService.MAX_WINDOW_SIZE)
-		    	{
-					TTPSegment s;    	
-					
-					System.out.println("Window before? " + TTPSegmentService.window.size());
-					
-					/* Add data to the window */
-					for(int i = 0 ; !segmentList.isEmpty() && TTPSegmentService.window.size() < TTPSegmentService.MAX_WINDOW_SIZE; i++)
-					{
-			 			byte[] data = segmentList.get(0);
-			 			//= new byte[SEGMENT_SIZE];
-			 			//data = Arrays.copyOfRange(segmentList.get(0), 0, SEGMENT_SIZE);
-			 			/*Compute checksum*/
-			 			MessageDigest md = MessageDigest.getInstance("MD5");
-			 			byte[] thedigest = md.digest(data);
-			 			
-			 			System.out.println("Size of the checksum is " + thedigest.length);
-			 			
-			 			/*end of compute checksum*/
-						s = senderThread.createSegment(0, TTPSegmentService.DATA_GO_BACK, data);
-						TTPSegmentService.window.add(s);
-						segmentList.remove(0);
-						System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
-						System.out.println("Sending data : " + s.getData());
 
-						if(i == 0)
-							windowTimer.startTimer(senderThread);
-						senderThread.sendWithoutTimeout();
-					}
+
+	 		if(TTPSegmentService.window.size() < TTPSegmentService.MAX_WINDOW_SIZE)
+	    	{
+				TTPSegment s;    	
+				
+				System.out.println("Window before? " + TTPSegmentService.window.size());
+				
+				/* Add data to the window */
+				while(!segmentList.isEmpty() && TTPSegmentService.window.size() < TTPSegmentService.MAX_WINDOW_SIZE)
+				{
+		 			byte[] data = segmentList.get(0);
+					s = senderThread.createSegment(0, TTPSegmentService.DATA_GO_BACK, data);
+					System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
+					if(TTPSegmentService.window.size() == 0)
+						windowTimer.startTimer(senderThread);
+					TTPSegmentService.window.add(s);
+					segmentList.remove(0);
 					
-					System.out.println("Window full " + TTPSegmentService.window.size());
-		    	}
-		    	else
-		    	{
-		    		System.out.println("Window is full");
-		    		
-		    		/* Wait for window size to get empty data */
-		    		while(TTPSegmentService.window.size() >= TTPSegmentService.MAX_WINDOW_SIZE)
-		    		{
-		    			;
-		    		}
-		    	}
-		 	}
-		 
-	    	
+					senderThread.sendWithoutTimeout();
+				}
+				
+				System.out.println("Window full " + TTPSegmentService.window.size());
+	    	}
+	    	else
+	    	{
+	    		System.out.println("Window is full");
+	    	}
 	    }
 	
 
@@ -130,6 +109,10 @@ public class ServerReceiverThread extends Thread {
     						  TTPSegmentService.window.remove(i);
 	    				  }
 	    				  
+	    				  /* Check if there are more packets to send */
+	    				  if(!senderThread.segmentList.isEmpty())
+	    					  sendGoBackN(senderThread.segmentList);
+	    				  
 	    				  if(TTPSegmentService.window.size() == 0)
 	    				  {
 	    					  System.out.println("Stopping the window timer");
@@ -140,7 +123,6 @@ public class ServerReceiverThread extends Thread {
 	    					  this.windowTimer.startTimer(this.senderThread);
 
 	    				  }
-	    				  
 	    			  }
 	    			  break;
 	    			  
@@ -194,6 +176,7 @@ public class ServerReceiverThread extends Thread {
 	       		if(TTPSegmentService.serverState == TTPSegmentService.CLOSED)
 	       		{
 	       			senderThread.timer.cancel();
+	       			windowTimer.timer.cancel();
 		    		System.out.println("Server closed connection");
 	       			break;
 	       		}

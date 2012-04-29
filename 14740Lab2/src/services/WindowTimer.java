@@ -1,5 +1,6 @@
 package services;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import datatypes.TTPSegment;
@@ -38,8 +39,13 @@ public class WindowTimer {
 			for(int i = 0; i < TTPSegmentService.window.size(); i++)
 			{
 				TTPSegment s = TTPSegmentService.window.get(i);
-				System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
-				this.senderThread.createDatagram(s);
+				System.out.println("Window -> Sending data starting with seq no : " + s.getSeqNumber());
+				try {
+					this.senderThread.createDatagram(s);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				this.senderThread.sendWithoutTimeout();
 			}
 			

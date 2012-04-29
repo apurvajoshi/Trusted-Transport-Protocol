@@ -56,24 +56,25 @@ public class client {
         System.out.println("BACK ");
 
         byte[] segment; 
+        File file =new File("src/received.txt");
+
+		if(!file.exists()){
+			file.createNewFile();
+		}
+		
+
+		FileOutputStream fos = new FileOutputStream(file,true);
+	   
+	    
       
 		while((segment=ts.recievePackets())!=null)
         {
-        	File file =new File("src/received.txt");
-
-			if(!file.exists()){
-    			file.createNewFile();
-    		}
-			
-
-			FileOutputStream fos = new FileOutputStream(file,true);
-		    ObjectOutputStream oos = new ObjectOutputStream(fos);
-		    
+        	
 	     	fos.write(segment);
         }
-		
-		//ts.closeConnection();
-		//System.out.println("Client Connection closed.");
+
+		ts.closeConnection();
+		System.out.println("Client Connection closed.");
 
 
 

@@ -31,7 +31,7 @@ public class TTPSegmentService{
 	public static final byte FILEPATH = 11;
 	public static final byte FILESIZE = 14;
 	public static final byte ACK_FILESIZE = 30;
-	public static final byte DATA = 12;
+
 
 	public static final byte DATA_GO_BACK = 13;
 
@@ -152,37 +152,6 @@ public class TTPSegmentService{
 		clientSenderThread.timer.cancel();
     }    
 
-    
-    public void sendGoBackN()
-    {
-    	if(window.size() < MAX_WINDOW_SIZE)
-    	{
-    	
-			/* */
-			String data = "Hello World";
-			TTPSegment s;    	
-			System.out.println("Window before? " + window.size());
-			
-			/* Add data to the window */
-			
-			/* TO DO -  DETERMINE BASED ON DATA SIZE */
-			for(int i = 0 ; window.size() < MAX_WINDOW_SIZE; i++)
-			{
-				s = serverSenderThread.createSegment(0, DATA_GO_BACK, data);
-				window.add(s);
-				System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
-				if(i == 0)
-					this.serverWindowTimer.startTimer(this.serverSenderThread);
-				serverSenderThread.sendWithoutTimeout();
-			}
-			
-			System.out.println("Window full " + window.size());
-    	}
-    	else
-    	{
-    		/* Refuse data */
-    	}
-    }
     
     
     public byte[] recievePackets()

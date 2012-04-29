@@ -10,6 +10,11 @@ import java.io.Serializable;
 // Format of datagram packet
 public class TTPSegment implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	// Source port
 	short srcport;
 	
@@ -30,7 +35,7 @@ public class TTPSegment implements Serializable {
 	
 	// Actual data
 	Object data;
-      //byte data[];
+   
 	
 	public TTPSegment() {
 		super();
