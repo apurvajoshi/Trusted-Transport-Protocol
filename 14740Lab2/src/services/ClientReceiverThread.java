@@ -14,7 +14,7 @@ public class ClientReceiverThread extends Thread {
 	public int serverExpectedSeqNo;
 	public int fileSize;
 	public List<byte[]> segmentList;
-	public static final int SEGMENT_SIZE = 492;
+	public static final int SEGMENT_SIZE = 496;
 	public int segmentsExpected =0;
 	public static int segmentNumber=0;
 
@@ -137,6 +137,7 @@ public class ClientReceiverThread extends Thread {
 	    			
 	    		case TTPSegmentService.DATA_GO_BACK:
 	    			System.out.println("Client recieved DATA_GO_BACK. expecting : " + this.serverExpectedSeqNo);
+	    			System.out.println("Segmnet Number : " + segmentNumber);
 	    			if(ackSeg.getSeqNumber() == this.serverExpectedSeqNo)
 	    			{
 	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, "a");
@@ -146,7 +147,11 @@ public class ClientReceiverThread extends Thread {
 	    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
 	    				
 	    				/* Add the received data into buffer */
-		    			segmentList.add((byte[])ackSeg.getData());
+	    				byte[] fileBytes = (byte[])ackSeg.getData();
+		    			segmentList.add(fileBytes);
+		    			//System.out.println("Segment received is ");
+		    			//System.out.println(Arrays.toString(fileBytes));
+		    				
 		    			segmentNumber++;
 		    			
 		    			if(segmentNumber == segmentsExpected)

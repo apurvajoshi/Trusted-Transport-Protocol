@@ -3,12 +3,10 @@
  */
 package applications;
 
-import java.io.File;
 import java.io.IOException;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
 import services.TTPSegmentService;
-import java.util.List;
 
 public class server {
 
@@ -17,8 +15,6 @@ public class server {
     private static final short serverListenPort = 6000;
     private static final short serverRespondPort = 6000;
 	public static final short clientPort = 6001;
-	public String[] filenames = {"a.txt","b.txt","c.txt"};
-
 
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
@@ -53,13 +49,8 @@ public class server {
 	       		/* Accept connection - > set the received sequence number + 1 as the acknowledgment number*/
 	       		ts.acceptConnection(clientPort, serverRespondPort, "127.0.0.1","127.0.0.1", TTPSegmentService.sizeOf(ackSeg.getData()));
 	    		System.out.println("Server Connection established.\n\n");
-	    		
-	    		//ts.sendGoBackN();
 
 	       	}	       	
-	       	/*Connection established.Now recieve filename and read it into a byte array*/
-	       	//File file = new File("../a.txt");
-	       	//ts.sendFile(file);
 	       		       	
 		}
 	}
