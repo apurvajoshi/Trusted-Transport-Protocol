@@ -31,7 +31,6 @@ public class SenderThread {
 	public static final int SEGMENT_SIZE = 496;
 	public static final int TIMER_INTERVAL = 5; // IN MS
 
-	public static int SegmentNumber=0;
 
 
 	public SenderThread (DatagramService ds, short srcPort, short dstPort, String srcAddr, String dstAddr)

@@ -16,7 +16,7 @@ public class client {
 	private static final short serverPort = 6000;
 	public static final short clientPort = 6001;
 	public static int fileSize =0;
-	public static String filename = "music.mp3";
+	public static String filename = "a.txt";
 	
 	/**
 	 * @param args

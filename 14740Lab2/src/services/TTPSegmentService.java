@@ -32,8 +32,7 @@ public class TTPSegmentService{
 	public static final byte FILESIZE = 14;
 	public static final byte ACK_FILESIZE = 30;
 	public static final byte DATA_GO_BACK = 13;
-    
-    
+        
     
     /* State definitions */
 	public static final int CLOSED  = 0;
@@ -48,7 +47,6 @@ public class TTPSegmentService{
 	public static final int CLOSE_WAIT  = 9;
 	public static final int LAST_ACK  = 10;
 	public static final int DATA_OVER  = 11;
-	
 	
 	
 	/* Starting sequence numbers */

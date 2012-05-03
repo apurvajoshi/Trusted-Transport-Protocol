@@ -38,7 +38,9 @@ public class ServerReceiverThread extends Thread {
 					s = senderThread.createSegment(0, TTPSegmentService.DATA_GO_BACK, data);
 					System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
 					if(TTPSegmentService.window.size() == 0)
+					{
 						windowTimer.startTimer(senderThread);
+					}
 					TTPSegmentService.window.add(s);
 					segmentList.remove(0);
 					
