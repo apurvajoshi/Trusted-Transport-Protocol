@@ -52,18 +52,12 @@ public class TTPSegmentService{
 	/* Starting sequence numbers */
 	public static final int CLIENT_STARTING_SEQ_NO  = 0;
 	public static final int SERVER_STARTING_SEQ_NO  = 1000;
-	public static final int MAX_WINDOW_SIZE = 5;
+	public static int MAX_WINDOW_SIZE = 5;
 	public static List<TTPSegment> window;
-
 	
 	public static volatile int serverState;
-	public static volatile  int clientState;
-	
-	
-	public static final int SEGMENT_SIZE = 512;
-	
+	public static volatile  int clientState;	
 	private DatagramService ds;
-
 	private ServerReceiverThread serverReceiverThread;
 	private SenderThread serverSenderThread;
 	private WindowTimer serverWindowTimer;
@@ -75,8 +69,6 @@ public class TTPSegmentService{
 	public TTPSegmentService(int port, int verbose) throws SocketException  {
 		super();
 		ds = new DatagramService(port, verbose);
-		TTPSegmentService.serverState = CLOSED;
-		TTPSegmentService.clientState = CLOSED;
 		window = new ArrayList<TTPSegment>();
 	}
 
@@ -86,10 +78,10 @@ public class TTPSegmentService{
 	}
 	
 	/* This function is used by the client to initiate a connection with the server */
-    public void createConnection(short srcPort,short dstPort,String srcAddr,String dstAddr)
+    public void createConnection(short srcPort,short dstPort,String srcAddr,String dstAddr, int timer_interval)
 	{			
 		/* Sending datagram */
-		clientSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);
+		clientSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr, timer_interval);
 		clientSenderThread.setSeqNo(CLIENT_STARTING_SEQ_NO);
 		clientSenderThread.createSegment(0, SYN, "a");
 		clientSenderThread.send();
@@ -109,11 +101,12 @@ public class TTPSegmentService{
 	}
     
     /*This function is used by the server to accept the connection with the server*/
-    public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr, int ackNo)
+    public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr, int ackNo, int window_size, int timer_interval)
 	{
       	/* Initialize a new sender and receiver thread*/
-    	serverWindowTimer = new WindowTimer();
-    	serverSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr);    	
+    	MAX_WINDOW_SIZE = window_size;
+    	serverWindowTimer = new WindowTimer(timer_interval);
+    	serverSenderThread = new SenderThread(this.ds, srcPort, dstPort, srcAddr, dstAddr, timer_interval);    	
     	serverSenderThread.setSeqNo(SERVER_STARTING_SEQ_NO);
 		serverSenderThread.createSegment(ackNo, SYN_ACK, "a");
 		serverSenderThread.send();

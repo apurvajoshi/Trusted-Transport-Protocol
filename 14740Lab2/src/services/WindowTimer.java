@@ -8,11 +8,12 @@ public class WindowTimer {
 
     public Timer timer;
     public WindowTimeoutTask timeoutTask;
-	public static final int TIMER_INTERVAL = 20;
+	public static int TIMER_INTERVAL = 20;
 
-	public WindowTimer()
+	public WindowTimer(int timer_interval)
 	{
         this.timer = new Timer();
+    	TIMER_INTERVAL = timer_interval;
 	}
 	
 	public void startTimer(SenderThread s) {

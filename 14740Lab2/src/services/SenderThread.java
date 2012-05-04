@@ -29,11 +29,11 @@ public class SenderThread {
     public TimeoutTask timeoutTask;
 	public List<byte[]> segmentList;
 	public static final int SEGMENT_SIZE = 496;
-	public static final int TIMER_INTERVAL = 5; // IN MS
+	public static int TIMER_INTERVAL = 5; // IN MS
 
 
 
-	public SenderThread (DatagramService ds, short srcPort, short dstPort, String srcAddr, String dstAddr)
+	public SenderThread (DatagramService ds, short srcPort, short dstPort, String srcAddr, String dstAddr, int timer)
 	{
 		this.ds = ds;
 		this.srcPort = srcPort;
@@ -42,6 +42,7 @@ public class SenderThread {
 		this.dstAddr = dstAddr;
         this.timer = new Timer();
         segmentList = new ArrayList<byte[]>();
+        TIMER_INTERVAL = timer;
 	}
 	
 	public void setSeqNo(int seqNo)

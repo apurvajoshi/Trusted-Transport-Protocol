@@ -10,9 +10,7 @@ public class ServerReceiverThread extends Thread {
 	public DatagramService ds;
 	public SenderThread senderThread;
 	public WindowTimer windowTimer;
-	public static String fileName ;
 	public int clientExpectedSeqNo;
-	public static final int SEGMENT_SIZE = 496;
 	File file ;
     
 	public ServerReceiverThread(DatagramService ds, SenderThread senderThread, WindowTimer windowTimer)
@@ -153,14 +151,14 @@ public class ServerReceiverThread extends Thread {
 	    		case TTPSegmentService.FILEPATH:
 					  System.out.println("Filename recieved is "+ ackSeg.getData());
 					  file = new File("src/applications/" + ackSeg.getData());
+					  
 					  int length = senderThread.readAndCreateSegments(file);
 					  System.out.println("Back");
-					  	    			 
+						  	    			 
 					  this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
-	    		      senderThread.createSegment(clientExpectedSeqNo ,TTPSegmentService.FILESIZE, length);
-	    		      senderThread.send();
-	    			  break;
-	    			  
+		    		  senderThread.createSegment(clientExpectedSeqNo ,TTPSegmentService.FILESIZE, length);
+		    		  senderThread.send();
+		    		  break;	    			  
 	    		}
 	       		
 

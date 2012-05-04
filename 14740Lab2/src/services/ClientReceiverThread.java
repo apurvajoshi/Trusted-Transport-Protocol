@@ -18,6 +18,7 @@ public class ClientReceiverThread extends Thread {
 	public static final int SEGMENT_SIZE = 496;
 	public int segmentsExpected =0;
 	public int segmentNumber=0;
+	public int checkVar = 0;
 	
 	public ClientReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
@@ -93,7 +94,7 @@ public class ClientReceiverThread extends Thread {
 	    			break;
 	    			
 	    		case TTPSegmentService.FIN:
-	    			System.out.println("Client received FIN.");
+    				System.out.println("Client received FIN.");
 	    			if(TTPSegmentService.clientState == TTPSegmentService.FIN_WAIT_1)
 	    			{
 	    				this.serverExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
@@ -115,6 +116,11 @@ public class ClientReceiverThread extends Thread {
 							System.out.println("Issues in waiting.");
 							e.printStackTrace();
 						}
+	    			}
+	    			else
+	    			{
+		    			System.out.println(ackSeg.getData());
+		    			System.exit(-1);
 	    			}
 	    			break;
 	    			
@@ -166,6 +172,8 @@ public class ClientReceiverThread extends Thread {
 	    				senderThread.createSegment(this.previousSeqNo, TTPSegmentService.ACK, "a");
 		    			senderThread.sendWithoutTimeout();
 	    			}
+	    			
+	    			checkVar++;
 	    			break;
 	    			
 	    		case TTPSegmentService.FILESIZE:
