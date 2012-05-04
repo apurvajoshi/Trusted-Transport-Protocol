@@ -57,7 +57,7 @@ public class TTPSegmentService{
 	/* Starting sequence numbers */
 	public static final int CLIENT_STARTING_SEQ_NO  = 0;
 	public static final int SERVER_STARTING_SEQ_NO  = 1000;
-	public static final int MAX_WINDOW_SIZE = 15;
+	public static final int MAX_WINDOW_SIZE = 2;
 	public static List<TTPSegment> window;
 
 	

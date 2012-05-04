@@ -85,7 +85,7 @@ public class SenderThread {
     	 return checksum;
     }
 
-	public Datagram createDatagram(TTPSegment seg) throws IOException
+	public Datagram createDatagram(TTPSegment seg) 
 	{
 		Datagram datagram = new Datagram();
 		datagram.setSrcaddr(srcAddr);
@@ -94,9 +94,16 @@ public class SenderThread {
 		datagram.setSrcport(srcPort);
 		
 		ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-		ObjectOutputStream oStream = new ObjectOutputStream( bStream );
-		oStream.writeObject (seg.getData());
-		byte[] byteVal = bStream. toByteArray();
+		ObjectOutputStream oStream = null;
+		try {
+			oStream = new ObjectOutputStream( bStream );
+			oStream.writeObject (seg.getData());
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
+		}
+		byte[] byteVal = bStream.toByteArray();
 		short checksum = calculate_checksum(byteVal);
 	    datagram.setChecksum(checksum);
 	    

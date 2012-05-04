@@ -170,21 +170,31 @@ public class ClientReceiverThread extends Thread {
 	    			System.out.println("Client recieved DATA_GO_BACK. expecting : " + this.serverExpectedSeqNo);
 
 	    			System.out.println("Segmnet Number : " + segmentNumber);
+             		System.out.println("Sequence number 1 "+ackSeg.getSeqNumber());
+ 
 	    			ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     				ObjectOutputStream oStream = new ObjectOutputStream( bStream );
     				oStream.writeObject (ackSeg.getData());
     				byte[] byteVal = bStream. toByteArray();
     				short checksum = calculate_checksum(byteVal);
     				short checksum_data = calculate_checksum(byteVal);
-    			
+    		/*	
 				if(flag==2)
     				{
     			    checksum_data = (short) (checksum_data & 0x1);
     			    System.out.println("Data is incorrect");
     			 
     				}
-                  flag++;   
-             			
+                  flag++;
+             */      
+                     if(((short)checksum_data == (short)datagram.getChecksum()))
+                     {
+                    	  System.out.println("TRUE");
+                     }
+                     else 
+                    	 System.out.println("False");
+                     
+             		System.out.println("Sequence number 2"+ackSeg.getSeqNumber());
 	    			if(ackSeg.getSeqNumber() == this.serverExpectedSeqNo && ((short)checksum_data == (short)datagram.getChecksum()))
 	    			{
 	    				 System.out.println("Data is correct");
@@ -212,7 +222,7 @@ public class ClientReceiverThread extends Thread {
 	    			{
 	    				// Re ACK packet with highest inorder seq # 
 	    				senderThread.createSegment(this.previousSeqNo, TTPSegmentService.ACK, "a");
-		    			senderThread.sendWithoutTimeout();
+		    			senderThread.send();
 	    			}
 	    			break;
 	    			

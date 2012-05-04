@@ -89,7 +89,6 @@ public class ServerReceiverThread extends Thread {
 	    			  else if(  TTPSegmentService.serverState == TTPSegmentService.ESTABLISHED)
 	    			  {  	    				  
 	    				  System.out.println("received ack for packet " + ackSeg.getAckNumber());
-	    				  this.windowTimer.stopTimer();
 	    				  int index = -1;
 	    				  /* Check if the received packet is in window */
 	    				  for(int i = 0 ; i < TTPSegmentService.window.size(); i++)
@@ -101,27 +100,32 @@ public class ServerReceiverThread extends Thread {
 	    						  System.out.println("New index is " + index);
 	    					  }
 	    				  }
-	    				  	    				  
-	    				  for(int i = index; i >= 0; i--)
-	    				  {
-	    					  TTPSegment s = TTPSegmentService.window.get(i);
-	    					  System.out.println("Element to be removed is " + s.getSeqNumber());
-    						  TTPSegmentService.window.remove(i);
-	    				  }
 	    				  
-	    				  /* Check if there are more packets to send */
-	    				  if(!senderThread.segmentList.isEmpty())
-	    					  sendGoBackN(senderThread.segmentList);
-	    				  
-	    				  if(TTPSegmentService.window.size() == 0)
+	    				  if(index != -1 )
 	    				  {
-	    					  System.out.println("Stopping the window timer");
+	    					  System.out.println("COMING HERE");
 	    					  this.windowTimer.stopTimer();
-	    				  }
-	    				  else
-	    				  {
-	    					  this.windowTimer.startTimer(this.senderThread);
 
+		    				  for(int i = index; i >= 0; i--)
+		    				  {
+		    					  TTPSegment s = TTPSegmentService.window.get(i);
+		    					  System.out.println("Element to be removed is " + s.getSeqNumber());
+	    						  TTPSegmentService.window.remove(i);
+		    				  }
+		    				  
+		    				  /* Check if there are more packets to send */
+		    				  if(!senderThread.segmentList.isEmpty())
+		    					  sendGoBackN(senderThread.segmentList);
+		    				  
+		    				  if(TTPSegmentService.window.size() == 0)
+		    				  {
+		    					  System.out.println("Stopping the window timer");
+		    					  this.windowTimer.stopTimer();
+		    				  }
+		    				  else
+		    				  {
+		    					  this.windowTimer.startTimer(this.senderThread);
+		    				  }
 	    				  }
 	    			  }
 	    			  break;
