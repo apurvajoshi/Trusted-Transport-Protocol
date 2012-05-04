@@ -70,16 +70,7 @@ public class client {
 		    fos.write(segment);
 
         }
-        byte[] checksum_recieved=ts.checksum_calculate(file);
-        boolean blnResult = Arrays.equals(checksum_recieved,ts.received_checksum());
-        if(blnResult)
-        {
-        	 System.out.println("Data checksums are same");
-        }
-        else
-        {
-        	 System.out.println("Data checksums are not the same");
-        }
+      
 		ts.closeConnection();
 		System.out.println("Client Connection closed.");
 

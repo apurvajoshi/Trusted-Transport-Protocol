@@ -220,8 +220,7 @@ public class SenderThread {
 	 		else
 	 			segment = Arrays.copyOfRange(readBuffer, offset, (offset+ length));
 	     	segmentList.add(segment);
-	     	//System.out.println("Segment to be sent in bytes is ");
-	     	//System.out.println(Arrays.toString(segment));
+	     	
 	     	offset += SEGMENT_SIZE;	 	
 	 	}	 
 	}	

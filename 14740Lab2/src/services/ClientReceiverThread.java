@@ -177,19 +177,19 @@ public class ClientReceiverThread extends Thread {
     				ObjectOutputStream oStream = new ObjectOutputStream( bStream );
     				oStream.writeObject (ackSeg.getData());
     				byte[] byteVal = bStream. toByteArray();
-    				short checksum = calculate_checksum(byteVal);
+    			
     				short checksum_data = calculate_checksum(byteVal);
     			
     				
     				/*Uncomment to check for checksum error*/
-			/*	if(flag==2)
+				if(flag==2)
     				{
     			    checksum_data = (short) (checksum_data & 0x1);
     			    System.out.println("Data is incorrect");
     			 
     				}
                   flag++;
-                  */
+                  
                   
                      if(((short)checksum_data == (short)datagram.getChecksum()))
                      {

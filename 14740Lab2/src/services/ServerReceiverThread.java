@@ -106,7 +106,7 @@ public class ServerReceiverThread extends Thread {
 	    				  
 	    				  if(index != -1 )
 	    				  {
-	    					  System.out.println("COMING HERE");
+	    					 
 	    					  this.windowTimer.stopTimer();
 
 		    				  for(int i = index; i >= 0; i--)
@@ -140,9 +140,7 @@ public class ServerReceiverThread extends Thread {
 	    			  senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.ACK, ackSeg.getData());
 
 	    			  senderThread.send();
-	    			  this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
-	    		      senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.CHECKSUM, file_checksum);
-	    		      senderThread.send();
+	    		
 	    			
 
 	    			  TTPSegmentService.serverState = TTPSegmentService.CLOSE_WAIT;
@@ -172,17 +170,14 @@ public class ServerReceiverThread extends Thread {
 					  System.out.println("Filename recieved is "+ ackSeg.getData());
 					  file = new File("src/applications/" + ackSeg.getData());
 					  int length = senderThread.readAndCreateSegments(file);
-					  file_checksum = senderThread.caclulate_file_checksum(file);
+					
 					  System.out.println("Back");
 					  	    			 
 					  this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
 	    		      senderThread.createSegment(clientExpectedSeqNo ,TTPSegmentService.FILESIZE, length);
 	    		      senderThread.send();
 	    		      
-	    		      /*this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
-	    		      senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.CHECKSUM, file_checksum);
-	    		      senderThread.send();
-	    		      */
+	    		    
 	    			  break;
 
 	    			  
