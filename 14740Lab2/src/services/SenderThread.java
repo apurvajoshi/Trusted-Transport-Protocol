@@ -1,6 +1,7 @@
 package services;
 
 import java.io.BufferedInputStream;
+import java.security.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,7 +35,6 @@ public class SenderThread {
 	public static final int SEGMENT_SIZE = 496;
 	public static final int TIMER_INTERVAL = 5; // IN MS
 
-	public static int SegmentNumber=0;
 
 
 	public SenderThread (DatagramService ds, short srcPort, short dstPort, String srcAddr, String dstAddr)
@@ -126,6 +126,17 @@ public class SenderThread {
         in.close();  
         return array;  
         }  
+    
+    public byte[] caclulate_file_checksum(File file) throws IOException, NoSuchAlgorithmException 
+    {
+     	FileInputStream fis = new FileInputStream(file);
+	  	BufferedInputStream bir = new BufferedInputStream(fis);
+	  	byte[] fileContents = new byte[(int) (file.length()-1)];
+		bir.read(fileContents);
+    	MessageDigest md = MessageDigest.getInstance("MD5");
+    	byte[] thedigest = md.digest(fileContents);
+    	return thedigest;
+    }
 
 	public TTPSegment createSegment(int ackNumber, byte flag, Object data)
 	{		

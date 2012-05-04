@@ -16,6 +16,7 @@ public class ServerReceiverThread extends Thread {
 
 	public int clientExpectedSeqNo;
 	public static final int SEGMENT_SIZE = 496;
+	public byte[] file_checksum;
 
 	File file ;
     
@@ -43,7 +44,9 @@ public class ServerReceiverThread extends Thread {
 					s = senderThread.createSegment(0, TTPSegmentService.DATA_GO_BACK, data);
 					System.out.println("Sending data starting with seq no : " + s.getSeqNumber());
 					if(TTPSegmentService.window.size() == 0)
+					{
 						windowTimer.startTimer(senderThread);
+					}
 					TTPSegmentService.window.add(s);
 					segmentList.remove(0);
 					
@@ -137,6 +140,10 @@ public class ServerReceiverThread extends Thread {
 	    			  senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.ACK, ackSeg.getData());
 
 	    			  senderThread.send();
+	    			  this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+	    		      senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.CHECKSUM, file_checksum);
+	    		      senderThread.send();
+	    			
 
 	    			  TTPSegmentService.serverState = TTPSegmentService.CLOSE_WAIT;
 	    			  
@@ -165,11 +172,17 @@ public class ServerReceiverThread extends Thread {
 					  System.out.println("Filename recieved is "+ ackSeg.getData());
 					  file = new File("src/applications/" + ackSeg.getData());
 					  int length = senderThread.readAndCreateSegments(file);
+					  file_checksum = senderThread.caclulate_file_checksum(file);
 					  System.out.println("Back");
 					  	    			 
 					  this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
 	    		      senderThread.createSegment(clientExpectedSeqNo ,TTPSegmentService.FILESIZE, length);
 	    		      senderThread.send();
+	    		      
+	    		      /*this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
+	    		      senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.CHECKSUM, file_checksum);
+	    		      senderThread.send();
+	    		      */
 	    			  break;
 
 	    			  

@@ -19,19 +19,18 @@ public class ClientReceiverThread extends Thread {
 	public int serverExpectedSeqNo;
 	public int previousSeqNo;
 	public int fileSize;
-	public List<byte[]> segmentList;
+	public List<byte[]> listOfSegments;
 	public static final int SEGMENT_SIZE = 496;
 	public int segmentsExpected =0;
-	public static int segmentNumber=0;
-	public static int flag =1;
-
-
-
+	public int flag=0;
+	public int segmentNumber=0;
+	public byte[] fileChecksumRecieved;
+	
 	public ClientReceiverThread(DatagramService ds, SenderThread senderThread)
 	{
 		this.ds = ds;
 		this.senderThread = senderThread;
-		segmentList = new ArrayList<byte[]>();
+		this.listOfSegments = new ArrayList<byte[]>();
 	}
 
 	
@@ -62,8 +61,8 @@ public class ClientReceiverThread extends Thread {
     	byte[] segment;
     	if(segmentNumber > 0)
     	{
-    		segment=segmentList.get(0);
-    		segmentList.remove(0);
+    		segment=this.listOfSegments.get(0);
+    		this.listOfSegments.remove(0);
         	segmentNumber--;
         	return segment;
     	}
@@ -76,8 +75,9 @@ public class ClientReceiverThread extends Thread {
     		Datagram datagram;
     		try {
 				datagram = ds.receiveDatagram();
-				senderThread.timeoutTask.cancel();
 	       		TTPSegment ackSeg=(TTPSegment)(datagram.getData());
+	       		System.out.println("\nThe first seq no : " + ackSeg.getSeqNumber());
+				senderThread.timeoutTask.cancel();
 	       		switch(ackSeg.getFlags()) {
 	       		
 	    		case TTPSegmentService.SYN_ACK: 
@@ -169,6 +169,7 @@ public class ClientReceiverThread extends Thread {
 	    		case TTPSegmentService.DATA_GO_BACK:
 	    			System.out.println("Client recieved DATA_GO_BACK. expecting : " + this.serverExpectedSeqNo);
 
+
 	    			System.out.println("Segmnet Number : " + segmentNumber);
              		System.out.println("Sequence number 1 "+ackSeg.getSeqNumber());
  
@@ -178,15 +179,18 @@ public class ClientReceiverThread extends Thread {
     				byte[] byteVal = bStream. toByteArray();
     				short checksum = calculate_checksum(byteVal);
     				short checksum_data = calculate_checksum(byteVal);
-    		/*	
-				if(flag==2)
+    			
+    				
+    				/*Uncomment to check for checksum error*/
+			/*	if(flag==2)
     				{
     			    checksum_data = (short) (checksum_data & 0x1);
     			    System.out.println("Data is incorrect");
     			 
     				}
                   flag++;
-             */      
+                  */
+                  
                      if(((short)checksum_data == (short)datagram.getChecksum()))
                      {
                     	  System.out.println("TRUE");
@@ -197,7 +201,7 @@ public class ClientReceiverThread extends Thread {
              		System.out.println("Sequence number 2"+ackSeg.getSeqNumber());
 	    			if(ackSeg.getSeqNumber() == this.serverExpectedSeqNo && ((short)checksum_data == (short)datagram.getChecksum()))
 	    			{
-	    				 System.out.println("Data is correct");
+
 	    				senderThread.createSegment(serverExpectedSeqNo, TTPSegmentService.ACK, "a");
 	    				senderThread.sendWithoutTimeout();
 
@@ -209,7 +213,7 @@ public class ClientReceiverThread extends Thread {
 	    		
 	    				/* Add the received data into buffer */
 	    				byte[] fileBytes = (byte[])ackSeg.getData();
-		    			segmentList.add(fileBytes);
+	    				listOfSegments.add(fileBytes);
 		    			//System.out.println("Segment received is ");
 		    			//System.out.println(Arrays.toString(fileBytes));
 		    				
@@ -226,7 +230,11 @@ public class ClientReceiverThread extends Thread {
 	    			}
 	    			break;
 	    			
-
+	    		case TTPSegmentService.CHECKSUM:
+	    			
+	    			fileChecksumRecieved= (byte[])(ackSeg.getData());
+	    			break;
+	    			
 	    		case TTPSegmentService.FILESIZE:
 	    			System.out.println("Client recieved FIELSIZE " + Integer.parseInt(ackSeg.getData().toString()));
 	    			fileSize = Integer.parseInt(ackSeg.getData().toString());

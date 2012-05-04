@@ -7,6 +7,8 @@ package applications;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 
 
@@ -18,14 +20,15 @@ public class client {
 	private static final short serverPort = 6000;
 	public static final short clientPort = 6001;
 	public static int fileSize =0;
-	public static String filename = "a.txt";
+	public static String filename = "music.mp3";
 	
 	/**
 	 * @param args
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
 		/*if(args.length != 2) {
 			printUsage();
 		}
@@ -67,7 +70,16 @@ public class client {
 		    fos.write(segment);
 
         }
-
+        byte[] checksum_recieved=ts.checksum_calculate(file);
+        boolean blnResult = Arrays.equals(checksum_recieved,ts.received_checksum());
+        if(blnResult)
+        {
+        	 System.out.println("Data checksums are same");
+        }
+        else
+        {
+        	 System.out.println("Data checksums are not the same");
+        }
 		ts.closeConnection();
 		System.out.println("Client Connection closed.");
 

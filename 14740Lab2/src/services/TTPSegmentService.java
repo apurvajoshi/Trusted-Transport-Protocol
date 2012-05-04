@@ -8,10 +8,15 @@
  */
 
 package services;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.SocketException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,8 +41,6 @@ public class TTPSegmentService{
 	public static final byte DATA_GO_BACK = 13;
 
     
-
-    
     /* State definitions */
 	public static final int CLOSED  = 0;
 	public static final int LISTEN  = 1;
@@ -53,7 +56,6 @@ public class TTPSegmentService{
 	public static final int DATA_OVER  = 11;
 	
 	
-	
 	/* Starting sequence numbers */
 	public static final int CLIENT_STARTING_SEQ_NO  = 0;
 	public static final int SERVER_STARTING_SEQ_NO  = 1000;
@@ -66,6 +68,7 @@ public class TTPSegmentService{
 	
 	
 	public static final int SEGMENT_SIZE = 512;
+	public static final byte CHECKSUM = 0;
 	
 	private DatagramService ds;
 
@@ -138,7 +141,10 @@ public class TTPSegmentService{
 		
 		serverSenderThread.timeoutTask.cancel();
 	}
-		
+	public byte[] received_checksum()
+		{
+		 return clientReceiverThread.fileChecksumRecieved;
+		}
     public void closeConnection()
     {
 		/* Sending datagram */
@@ -152,6 +158,19 @@ public class TTPSegmentService{
 		clientSenderThread.timer.cancel();
     }    
 
+    
+    
+    public byte[] checksum_calculate(File file) throws NoSuchAlgorithmException, IOException 
+    {
+    	FileInputStream fis = new FileInputStream(file);
+	  	BufferedInputStream bir = new BufferedInputStream(fis);
+	  	byte[] fileData = new byte[(int) (file.length()-1)];
+		bir.read(fileData);
+    	MessageDigest md = MessageDigest.getInstance("MD5");
+    	byte[] thedigest = md.digest(fileData);
+    	return thedigest;
+    }
+    
     
     
     public byte[] recievePackets()
