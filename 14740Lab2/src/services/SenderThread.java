@@ -1,10 +1,14 @@
 package services;
 
 import java.io.BufferedInputStream;
+import java.security.*;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,17 +64,81 @@ public class SenderThread {
 		this.seg = seg;
 	}
 
-	public Datagram createDatagram(TTPSegment seg)
+	
+    public short calculate_checksum(byte[] data)
+    {
+    	short checksum=0;
+    	int overflow_flag=0;
+    	 for(int i =0;i<(data.length-1);i+=2)
+    	 {   
+    		  overflow_flag=0;
+    		  checksum += (data[i]<<8)|(data[i+1]);
+    		  if((((data[i]>>7) & 0x01) == 1) && (((data[i+1]>>7) & 0x01)==1))
+    		  {
+    			   overflow_flag=1;
+    		  }
+    	 }
+    	if(overflow_flag ==1)
+    	{ 
+    		 checksum =(short)(checksum +1);
+    	}
+    	 checksum = (short) ~checksum;
+    	 return checksum;
+    }
+
+	public Datagram createDatagram(TTPSegment seg) 
 	{
 		Datagram datagram = new Datagram();
 		datagram.setSrcaddr(srcAddr);
 		datagram.setDstaddr(dstAddr);
 		datagram.setDstport(dstPort);
 		datagram.setSrcport(srcPort);
+		
+		ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+		ObjectOutputStream oStream = null;
+		try {
+			oStream = new ObjectOutputStream( bStream );
+			oStream.writeObject (seg.getData());
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
+		}
+		byte[] byteVal = bStream.toByteArray();
+		short checksum = calculate_checksum(byteVal);
+	    datagram.setChecksum(checksum);
+	    
 		datagram.setData(seg);	
 		return datagram;
 	}
- 
+
+
+    
+   
+    public byte[] fileToByteArray(File file) throws FileNotFoundException, IOException{  
+        int length = (int) file.length();  
+        byte[] array = new byte[length];  
+        InputStream in = new FileInputStream(file);  
+        int offset = 0;  
+        while (offset < length) {  
+            in.read(array, offset, (length - offset));  
+            offset += length;  
+        }  
+        in.close();  
+        return array;  
+        }  
+    
+    public byte[] caclulate_file_checksum(File file) throws IOException, NoSuchAlgorithmException 
+    {
+     	FileInputStream fis = new FileInputStream(file);
+	  	BufferedInputStream bir = new BufferedInputStream(fis);
+	  	byte[] fileContents = new byte[(int) (file.length()-1)];
+		bir.read(fileContents);
+    	MessageDigest md = MessageDigest.getInstance("MD5");
+    	byte[] thedigest = md.digest(fileContents);
+    	return thedigest;
+    }
+
 	public TTPSegment createSegment(int ackNumber, byte flag, Object data)
 	{		
 		this.seg = new TTPSegment(this.srcPort, this.dstPort, this.seqNo, ackNumber, (byte)16,  flag,  (short)750, (Object)data);
@@ -81,7 +149,9 @@ public class SenderThread {
 
     public void send() {
     	try {
+
     		this.timeoutTask = new TimeoutTask(createDatagram(this.seg));
+
 			System.out.println("Timer started");
 		    timer.schedule(timeoutTask, TIMER_INTERVAL*1000, TIMER_INTERVAL*1000);
 			ds.sendDatagram(createDatagram(this.seg));
@@ -109,6 +179,7 @@ public class SenderThread {
     	{
     		this.datagram = datagram;
     	}
+    	
 
     	
         public void run() {
@@ -150,8 +221,7 @@ public class SenderThread {
 	 		else
 	 			segment = Arrays.copyOfRange(readBuffer, offset, (offset+ length));
 	     	segmentList.add(segment);
-	     	//System.out.println("Segment to be sent in bytes is ");
-	     	//System.out.println(Arrays.toString(segment));
+	     	
 	     	offset += SEGMENT_SIZE;	 	
 	 	}	 
 	}	

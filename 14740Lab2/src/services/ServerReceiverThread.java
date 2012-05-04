@@ -2,6 +2,7 @@ package services;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import datatypes.Datagram;
 import datatypes.TTPSegment;
@@ -20,8 +21,9 @@ public class ServerReceiverThread extends Thread {
 		this.windowTimer = windowTimer;
 	}
 	
-	 public void sendGoBackN(List<byte[]> segmentList)
+	 public void sendGoBackN(List<byte[]> segmentList) throws NoSuchAlgorithmException  
 	    {
+
 
 	 		if(TTPSegmentService.window.size() < TTPSegmentService.MAX_WINDOW_SIZE)
 	    	{
@@ -80,6 +82,7 @@ public class ServerReceiverThread extends Thread {
 	    				  System.out.println("Server closed.");
 	    				  TTPSegmentService.serverState = TTPSegmentService.CLOSED;
 	    			  }
+
 	    			  else if(  TTPSegmentService.serverState == TTPSegmentService.ESTABLISHED)
 	    			  {  	    				  
 	    				  System.out.println("received ack for packet " + ackSeg.getAckNumber());
@@ -97,7 +100,9 @@ public class ServerReceiverThread extends Thread {
 	    				  
 	    				  if(index != -1 )
 	    				  {
+	    					 
 	    					  this.windowTimer.stopTimer();
+
 		    				  for(int i = index; i >= 0; i--)
 		    				  {
 		    					  TTPSegment s = TTPSegmentService.window.get(i);
@@ -124,9 +129,13 @@ public class ServerReceiverThread extends Thread {
 	    			  
 	    		case TTPSegmentService.FIN:
 	    			  System.out.println("Server received FIN");
+
 	    			  this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
 	    			  senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.ACK, ackSeg.getData());
+
 	    			  senderThread.send();
+	    		
+	    			
 
 	    			  TTPSegmentService.serverState = TTPSegmentService.CLOSE_WAIT;
 	    			  
@@ -138,11 +147,14 @@ public class ServerReceiverThread extends Thread {
 	    			   */
 
 	    			  
+
 	    			  senderThread.createSegment(clientExpectedSeqNo,TTPSegmentService.FIN,"FIN");
+
 	    			  senderThread.send();
 	    			  TTPSegmentService.serverState = TTPSegmentService.LAST_ACK;
 	    			  break;
 	    			  
+
 	    		case TTPSegmentService.ACK_FILESIZE:
 	    			  sendGoBackN(senderThread.segmentList);
 	    			  break;
@@ -153,12 +165,14 @@ public class ServerReceiverThread extends Thread {
 					  file = new File("src/applications/" + ackSeg.getData());
 					  
 					  int length = senderThread.readAndCreateSegments(file);
+					
 					  System.out.println("Back");
 						  	    			 
 					  this.clientExpectedSeqNo = ackSeg.getSeqNumber() + TTPSegmentService.sizeOf(ackSeg.getData());
 		    		  senderThread.createSegment(clientExpectedSeqNo ,TTPSegmentService.FILESIZE, length);
 		    		  senderThread.send();
 		    		  break;	    			  
+
 	    		}
 	       		
 
@@ -178,6 +192,9 @@ public class ServerReceiverThread extends Thread {
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				System.out.println("ClassNotFoundException in server receiver thread");
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     	}

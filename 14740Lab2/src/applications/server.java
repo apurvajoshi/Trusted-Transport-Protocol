@@ -14,9 +14,6 @@ public class server {
 	public static short port;
 	public static int window_size;
 	public static int timer_interval;
-    //private static final short serverListenPort = 6000;
-    //private static final short serverRespondPort = 6000;
-	//public static final short clientPort = 6001;
 
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {

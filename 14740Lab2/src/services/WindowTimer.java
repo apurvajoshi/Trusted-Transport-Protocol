@@ -39,10 +39,12 @@ public class WindowTimer {
             /* Send all the Unacked packets in the window */
 			for(int i = 0; i < TTPSegmentService.window.size(); i++)
 			{
+
 				TTPSegment seg = TTPSegmentService.window.get(i);
 				System.out.println("Window -> Sending data starting with seq no : " + seg.getSeqNumber());
 				this.senderThread.setTTPSegment(seg);
 				this.senderThread.sendWithoutTimeout();
+
 			}
 			
         }

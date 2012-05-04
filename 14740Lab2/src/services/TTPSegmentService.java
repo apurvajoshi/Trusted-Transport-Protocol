@@ -8,10 +8,15 @@
  */
 
 package services;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.SocketException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,8 +36,10 @@ public class TTPSegmentService{
 	public static final byte FILEPATH = 11;
 	public static final byte FILESIZE = 14;
 	public static final byte ACK_FILESIZE = 30;
+
+
 	public static final byte DATA_GO_BACK = 13;
-        
+
     
     /* State definitions */
 	public static final int CLOSED  = 0;
@@ -52,11 +59,12 @@ public class TTPSegmentService{
 	/* Starting sequence numbers */
 	public static final int CLIENT_STARTING_SEQ_NO  = 0;
 	public static final int SERVER_STARTING_SEQ_NO  = 1000;
+	
 	public static int MAX_WINDOW_SIZE = 5;
 	public static List<TTPSegment> window;
 	
 	public static volatile int serverState;
-	public static volatile  int clientState;	
+	public static volatile  int clientState;		
 	private DatagramService ds;
 	private ServerReceiverThread serverReceiverThread;
 	private SenderThread serverSenderThread;
@@ -100,6 +108,9 @@ public class TTPSegmentService{
 		clientSenderThread.timeoutTask.cancel();		
 	}
     
+    
+
+    
     /*This function is used by the server to accept the connection with the server*/
     public void acceptConnection(short dstPort,short srcPort,String srcAddr,String dstAddr, int ackNo, int window_size, int timer_interval)
 	{
@@ -123,7 +134,7 @@ public class TTPSegmentService{
 		
 		serverSenderThread.timeoutTask.cancel();
 	}
-		
+	
     public void closeConnection()
     {
 		/* Sending datagram */
@@ -137,6 +148,19 @@ public class TTPSegmentService{
 		clientSenderThread.timer.cancel();
     }    
 
+    
+    
+    public byte[] checksum_calculate(File file) throws NoSuchAlgorithmException, IOException 
+    {
+    	FileInputStream fis = new FileInputStream(file);
+	  	BufferedInputStream bir = new BufferedInputStream(fis);
+	  	byte[] fileData = new byte[(int) (file.length()-1)];
+		bir.read(fileData);
+    	MessageDigest md = MessageDigest.getInstance("MD5");
+    	byte[] thedigest = md.digest(fileData);
+    	return thedigest;
+    }
+    
     
     
     public byte[] recievePackets()
@@ -168,7 +192,12 @@ public class TTPSegmentService{
     	int size=0;
     	clientSenderThread.createSegment(1, FILEPATH, fileName);
 	    clientSenderThread.send();
-	    
+	    while(clientState != DATA_OVER)
+	    {
+	    	;
+	    }
 	    return size;
+
    }    
+
 }

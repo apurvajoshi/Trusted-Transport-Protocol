@@ -35,7 +35,7 @@ public class TTPSegment implements Serializable {
 	
 	// Actual data
 	Object data;
-
+   
 	
 	public TTPSegment() {
 		super();
